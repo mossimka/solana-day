@@ -26,7 +26,7 @@ export default function HeroSection() {
           Join the{' '}
           <Typewriter 
             words={typewriterWords}
-            className="text-pink-400 font-bold"
+            className="text-accent font-bold"
             typingSpeed={100}
             deletingSpeed={80}
             pauseDuration={2500}
