@@ -1,0 +1,104 @@
+@import "tailwindcss";
+@import "./variables.css";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html,
+body,
+#root {
+  font-family: "Montserrat", sans-serif;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+* {
+  font-family: "Montserrat", sans-serif;
+  scrollbar-color: var(--color-primary) var(--color-bg-primary);
+  scrollbar-width: 1vw;
+  margin: 0;
+}
+
+button,
+a {
+  cursor: pointer;
+  text-decoration: none;
+  font-family: "Montserrat", sans-serif;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-text-invert);
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-backdrop-blur));
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+}
+
+#nprogress .bar {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+  height: 3px;
+}
+
+#nprogress .spinner-icon {
+  border-top-color: var(--color-accent);
+  border-left-color: var(--color-accent);
+}
+
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px var(--color-accent), 0 0 5px var(--color-accent);
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn5 {
+  animation: fadeIn 0.5s ease;
+}
+
+.animate-fadeIn8 {
+  animation: fadeIn 0.8s ease;
+}
+
+.description {
+  font-size: 1.2rem;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.title {
+  font-size: 2.7rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-weight: 600;
+}
+
+h2 {
+  font-weight: 700;
+}

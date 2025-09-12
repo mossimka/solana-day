@@ -1,0 +1,33 @@
+.burgerMenu {
+  background: var(--primary-color);
+  margin: 0;
+  padding: 1rem;
+  width: 300px;
+}
+
+.burgerMenu ul {
+  list-style: none;
+  padding: 0 1rem;
+  margin: 0;
+  width: 80%;
+}
+
+.burgerMenu ul li {
+  margin-bottom: 0.75rem;
+}
+
+.link {
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 0.6rem;
+}
+
+.link:hover {
+  cursor: pointer;
+  color: var(--bg-color);
+  background-color: var(--primary-hover);
+}
