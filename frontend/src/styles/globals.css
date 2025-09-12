@@ -238,3 +238,11 @@ textarea {
 .button {
   @apply bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg;
 }
+
+.filter {
+  filter: var(--filter);
+}
+
+.filter2 {
+  filter: var(--filter2);
+}
