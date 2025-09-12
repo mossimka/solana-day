@@ -1,40 +1,63 @@
+import Image from "next/image";
+
+const steps = [
+  {
+    image: "/blockchain.png",
+    title: "Register",
+    text: "Create your account in just a few easy steps to reserve your spot on the platform. Registration is free, quick, and designed to get you started without delays.",
+  },
+  {
+    image: "/wallet.png",
+    title: "Import your wallet",
+    text: "Connect your crypto wallet securely and gain instant access to your funds. This step also unlocks all key features you’ll need to explore the platform with confidence.",
+  },
+  {
+    image: "/coin.png",
+    title: "Put your assets",
+    text: "Deposit your digital assets safely and manage them from one place. Track, optimize, and grow your portfolio while keeping everything secure and accessible anytime.",
+  },
+];
+
 export default function HowItWorks() {
   return (
-    <section className="flex flex-col items-center justify-center text-center px-4 py-12">
-      <h1 className="text-4xl md:text-6xl font-bold mb-4">How it works</h1>
-      <p className="text-lg md:text-2xl mb-8 max-w-2xl">
-        Join us for a day of learning, networking, and fun as we explore the
-        Solana ecosystem together. Here’s how you can make the most of Solana
-        Day:
+    <section className="flex flex-col items-center gap-12 px-4 py-16">
+      <h1 className="text-4xl font-bold text-center">How It Works</h1>
+      <p className="max-w-2xl mx-auto text-center text-lg text-gray-400">
+        Getting started with Sephyra is simple and straightforward. Follow these
+        three easy steps to set up your account and begin managing your assets:
       </p>
-      <div className="flex flex-col gap-8 w-full max-w-md mx-auto">
-        {/* Step 1 */}
-        <div className="flex flex-col items-center p-6 bg-white/80 rounded-lg shadow-md">
-          <div className="mb-4 text-5xl">📝</div>
-          <h2 className="text-xl font-semibold mb-2">1. Register</h2>
-          <p className="text-base text-gray-700">
-            Sign up for the event and secure your spot. Registration is quick
-            and easy!
-          </p>
-        </div>
-        {/* Step 2 */}
-        <div className="flex flex-col items-center p-6 bg-white/80 rounded-lg shadow-md">
-          <div className="mb-4 text-5xl">🤝</div>
-          <h2 className="text-xl font-semibold mb-2">2. Participate</h2>
-          <p className="text-base text-gray-700">
-            Attend workshops, join discussions, and connect with fellow Solana
-            enthusiasts and experts.
-          </p>
-        </div>
-        {/* Step 3 */}
-        <div className="flex flex-col items-center p-6 bg-white/80 rounded-lg shadow-md">
-          <div className="mb-4 text-5xl">🚀</div>
-          <h2 className="text-xl font-semibold mb-2">3. Build & Grow</h2>
-          <p className="text-base text-gray-700">
-            Apply what you’ve learned, collaborate on projects, and become part
-            of the Solana community!
-          </p>
-        </div>
+
+      <div className="flex flex-col gap-40 w-full max-w-4xl mx-auto">
+        {steps.map((step, idx) => (
+          <div
+            key={step.title}
+            className={`flex flex-col md:flex-row justify-between items-center ${
+              idx % 2 === 1 ? "md:flex-row-reverse" : ""
+            }`}
+          >
+            {/* Image block */}
+            <div
+              className={`flex-[0.45] flex ${
+                idx % 2 === 1 ? "md:justify-end" : "md:justify-start"
+              }`}
+            >
+              <div className="relative w-72 h-72 rounded-lg overflow-hidden shadow">
+                <Image
+                  src={step.image}
+                  alt={step.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Text block */}
+            <div className="flex-[0.45] text-center md:text-left">
+              <h2 className="text-2xl font-semibold mb-2">{step.title}</h2>
+              <p className="text-gray-400 leading-relaxed">{step.text}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
