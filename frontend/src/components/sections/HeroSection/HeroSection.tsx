@@ -1,13 +1,42 @@
+import Globe from '@/components/ui/Globe/Globe';
+import Typewriter from '@/components/ui/Typewriter/Typewriter';
+
 export default function HeroSection() {
+  const typewriterWords = [
+    'simplest',
+    'most secure',
+    'fastest',
+    'innovative',
+    'revolutionary',
+    'safest'
+  ];
+
   return (
-    <section className="flex flex-col items-center justify-center text-center px-4">
-      <h1 className="text-4xl md:text-6xl font-bold mb-4">
-        Welcome to Solana Day!
-      </h1>
-      <p className="text-lg md:text-2xl mb-8 max-w-2xl">
-        Join us for a day of learning, networking, and fun as we explore the
-        Solana ecosystem.
-      </p>
+    <section className="relative flex flex-col items-center justify-center text-center px-4 min-h-screen">
+      <div className="absolute inset-0 z-0">
+        <Globe className="w-[100%] h-full" />
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white">
+          Sephyra is here!
+        </h1>
+        <p className="text-2xl md:text-2xl mb-8 max-w-3xl text-white/90">
+          Join the{' '}
+          <Typewriter 
+            words={typewriterWords}
+            className="text-pink-400 font-bold"
+            typingSpeed={100}
+            deletingSpeed={80}
+            pauseDuration={2500}
+          />{' '}
+          way to manage your money on Solana.
+        </p>
+        <button className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg">
+          Get Started
+        </button>
+      </div>
     </section>
   );
 }
