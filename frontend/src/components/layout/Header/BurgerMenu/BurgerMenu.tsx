@@ -1,19 +1,43 @@
-'use client';
-
-import Styles from './BurgerMenu.module.css'
-import Link from 'next/link';
-
-const BurgerMenu = () => {
+"use client";
+import { useState } from "react";
+import { LogInIcon, Menu, X } from "lucide-react";
+import Link from "next/link";
+import Logo from "../../Logo/Logo";
+export default function BurgerMenu() {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className={Styles.burgerMenu}>
+    <nav className="mobile-header glass">
       <ul>
-        <li><Link href="#about" className={Styles.link}>About</Link></li>
-        <li><Link href="#how_it_works" className={Styles.link}>How It Works</Link></li>
-        <li><Link href="#contact" className={Styles.link}>Contact</Link></li>
+        <li>
+          <Logo />
+        </li>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <li>
+            <button
+              style={{ padding: "0.6rem", borderRadius: "10px" }}
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {isOpen ? <X size="20" /> : <Menu size="20" />}
+            </button>
+          </li>
+        </div>
       </ul>
+      {isOpen && (
+        <ul className="burger-menu">
+          <li>
+            <Link href="#how-it-works">How It Works</Link>
+          </li>
+          <li>
+            <Link href="#features">Features</Link>
+          </li>
+          <li>
+            <Link href="/sign-in">
+              <LogInIcon size="20" />
+            </Link>
+          </li>
+        </ul>
+      )}
     </nav>
   );
-};
-
-export default BurgerMenu;
+}
