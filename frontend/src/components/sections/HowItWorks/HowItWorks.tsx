@@ -3,17 +3,17 @@ import styles from "./HowItWorks.module.css";
 
 const steps = [
   {
-    image: "/blockchain.png",
+    image: "/blockchain.webp",
     title: "Register",
     text: "Create your account in just a few easy steps to reserve your spot on the platform. Registration is free, quick, and designed to get you started without delays.",
   },
   {
-    image: "/wallet.png",
+    image: "/wallet.webp",
     title: "Import your wallet",
     text: "Connect your crypto wallet securely and gain instant access to your funds. This step also unlocks all key features you’ll need to explore the platform with confidence.",
   },
   {
-    image: "/coin.png",
+    image: "/coin.webp  ",
     title: "Put your assets",
     text: "Deposit your digital assets safely and manage them from one place. Track, optimize, and grow your portfolio while keeping everything secure and accessible anytime.",
   },

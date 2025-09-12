@@ -42,4 +42,7 @@
   --glass-bg: rgba(26, 19, 26, 0.6);
   --glass-shadow: rgba(255, 105, 180, 0.1);
   --glass-backdrop-blur: 20px;
+
+  --filter: drop-shadow(0 0 10px rgba(255, 192, 203, 0.5));
+  --filter2: drop-shadow(0 0 20px rgba(255, 192, 203, 0.95));
 }

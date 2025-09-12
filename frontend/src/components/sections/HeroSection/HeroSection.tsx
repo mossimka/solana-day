@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import Globe from '@/components/ui/Globe/Globe';
 import Typewriter from '@/components/ui/Typewriter/Typewriter';
 
@@ -36,6 +38,17 @@ export default function HeroSection() {
         <button className="bg-gradient-to-r from-pink-500 text-white to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg">
           Get Started
         </button>
+
+        <div className='flex flex-col items-center w-full gap-3 mt-8'>
+          <div className='flex items-center gap-3'>
+            <Image className='filter' src="/solana-coin.webp" alt="Solana Day" width="50" height="50" />
+            <h3 className="text-white/80 text-md md:text-base">Developed during Solana Day</h3>
+          </div>
+          <div className='flex gap-3 text-white/80'>
+            <p>powered by</p>
+            <Image className='filter2' src="/decentrathon.webp" alt="Decentrathor Logo" width="150" height="50" />
+          </div>
+        </div>
       </div>
     </section>
   );
