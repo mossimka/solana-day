@@ -1,0 +1,34 @@
+/* Floating animation keyframes */
+@keyframes floatDown {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.floatingImage {
+  animation: floatDown 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.floatingImage2 {
+  animation: floatDown 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}

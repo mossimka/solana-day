@@ -9,6 +9,9 @@ declare global {
       GLOBE: (options: Record<string, unknown>) => {
         destroy: () => void;
       };
+      NET: (options: Record<string, unknown>) => {
+        destroy: () => void;
+      };
     };
   }
 }
