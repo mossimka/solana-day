@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true, // Необходимо для TypeORM
+    "emitDecoratorMetadata": true   // Необходимо для TypeORM
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
