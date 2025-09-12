@@ -31,8 +31,6 @@
   align-items: center;
 }
 
-
-
 .navLink {
   color: var(--color-text-primary);
   font-size: 1rem;
@@ -53,7 +51,6 @@
 
 .signInButton {
   background: var(--gradient-primary);
-  color: var(--color-text-invert);
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
   font-weight: 600;
@@ -62,7 +59,12 @@
   cursor: pointer;
 }
 
+.signInButton span {
+    cursor: pointer;
+}
+
 .signInButton:hover {
   transform: translateY(-2px);
   box-shadow: var(--hover-shadow);
+  cursor: pointer;
 }

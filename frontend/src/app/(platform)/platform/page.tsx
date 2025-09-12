@@ -4,11 +4,11 @@ import Logo from "@/components/layout/Logo/Logo";
 import Globe from "@/components/ui/Globe/Globe";
 import GoBack from "@/components/ui/GoBack/GoBack";
 
-export default function SignUpPage() {
+export default function PlatformPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main className="relative overflow-hidden ">
       <div className="absolute inset-0 z-0">
-        <Globe className="w-[100%] h-full" />
+        <Globe className="w-[100%] h-full" /> 
       </div>
       <div className="min-h-screen flex items-center justify-center flex-col z-10 relative">
         <div className="flex items-center space-x-4 mb-8">

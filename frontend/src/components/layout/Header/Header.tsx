@@ -31,7 +31,7 @@ const Header = () => {
             </Link>
           </li>
           <li className={Styles.navItem}>
-            <Link href="#try-now" className={`${Styles.navLink} ${Styles.signInButton}`}>
+            <Link href="/sign-in" className={`${Styles.navLink} ${Styles.signInButton}`}>
               <span>Sign in</span>
               <LogInIcon size={20} />
             </Link>

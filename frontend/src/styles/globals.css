@@ -27,6 +27,7 @@ body,
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-color: var(--color-accent) var(--glass-bg);
 }
 
 html {
@@ -146,6 +147,41 @@ ul {
   border-radius: 1rem;
 }
 
+.text-accent {
+  color: var(--color-accent) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+/* Custom cursor utility classes */
+.cursor-default {
+  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), auto !important;
+}
+
+.cursor-pointer {
+  cursor: url('/cursor/pointer.png'), url('/cursor/cursor.cur'), pointer !important;
+}
+
+/* Text elements use default cursor */
+p, span, div, h1, h2, h3, h4, h5, h6 {
+  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), auto;
+}
+
+/* Input fields use default cursor */
+input, textarea {
+  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), text;
+}
+
 .animate-spin {
   animation: spin 0.4s linear infinite;
 }
@@ -187,4 +223,17 @@ ul {
   100% {
     transform: rotate(360deg);
   }
+}
+
+
+.button {
+  @apply bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg;
+}
+
+.filter {
+  filter: var(--filter);
+}
+
+.filter2 {
+  filter: var(--filter2);
 }

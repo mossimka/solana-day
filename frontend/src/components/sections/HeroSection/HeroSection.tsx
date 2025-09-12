@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import Globe from '@/components/ui/Globe/Globe';
 import Typewriter from '@/components/ui/Typewriter/Typewriter';
 
@@ -12,9 +14,9 @@ export default function HeroSection() {
   ];
 
   return (
-    <section className="relative flex flex-col items-center justify-center text-center px-4 min-h-screen">
+    <section className="relative flex flex-col items-center justify-center text-center min-h-screen">
       <div className="absolute inset-0 z-0">
-        <Globe className="w-[100%] h-full" />
+        <Globe className="w-[99%] h-full" />
       </div>
       
       {/* Content */}
@@ -26,16 +28,27 @@ export default function HeroSection() {
           Join the{' '}
           <Typewriter 
             words={typewriterWords}
-            className="text-pink-400 font-bold"
+            className="text-accent font-bold"
             typingSpeed={100}
             deletingSpeed={80}
             pauseDuration={2500}
           />{' '}
           way to manage your money on Solana.
         </p>
-        <button className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg">
+        <button className="bg-gradient-to-r from-pink-500 text-white to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg">
           Get Started
         </button>
+
+        <div className='flex flex-col items-center w-full gap-3 mt-8'>
+          <div className='flex items-center gap-3'>
+            <Image className='filter' src="/solana-coin.webp" alt="Solana Day" width="50" height="50" />
+            <h3 className="text-white/80 text-md md:text-base">Developed during Solana Day</h3>
+          </div>
+          <div className='flex gap-3 text-white/80'>
+            <p>powered by</p>
+            <Image className='filter2' src="/decentrathon.webp" alt="Decentrathor Logo" width="150" height="50" />
+          </div>
+        </div>
       </div>
     </section>
   );
