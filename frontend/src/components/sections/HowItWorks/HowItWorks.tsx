@@ -22,9 +22,36 @@ const steps = [
 export default function HowItWorks() {
   return (
     <div className="relative">
+      {/* Falling Zephyr logos */}
+      <div className={styles.fallingLogos}>
+        {/* 4 Zephyr logos */}
+        {[...Array(4)].map((_, index) => (
+          <Image
+            key={`zephyr-${index}`}
+            src="/logo.png"
+            alt="Zephyr Logo"
+            width={60}
+            height={60}
+            className={styles.fallingLogo}
+          />
+        ))}
+        
+        {/* 4 Solana coins */}
+        {[...Array(4)].map((_, index) => (
+          <Image
+            key={`solana-${index}`}
+            src="/solana-coin.webp"
+            alt="Solana Coin"
+            width={60}
+            height={60}
+            className={styles.fallingCoin}
+          />
+        ))}
+      </div>
+
       <section className="relative z-10 flex flex-col items-center gap-12 px-4 py-16">
-        <h1 className="text-4xl font-bold text-center">How It Works</h1>
-        <p className="max-w-2xl mx-auto text-center text-lg text-gray-400">
+        <h1 className="text-5xl font-bold text-center">How It Works</h1>
+        <p className="max-w-3xl mx-auto text-center text-xl text-gray-400">
           Getting started with Sephyra is simple and straightforward. Follow these
           three easy steps to set up your account and begin managing your assets:
         </p>
@@ -59,8 +86,8 @@ export default function HowItWorks() {
 
               {/* Text block */}
               <div className="flex-[0.45] text-center md:text-left">
-                <h2 className="text-2xl font-semibold text-primary mb-2">{step.title}</h2>
-                <p className="text-gray-400 leading-relaxed">{step.text}</p>
+                <h2 className="text-3xl font-semibold text-primary mb-2">{step.title}</h2>
+                <p className="text-gray-400 leading-relaxed text-xl">{step.text}</p>
               </div>
             </div>
           ))}

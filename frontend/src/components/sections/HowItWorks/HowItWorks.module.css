@@ -32,3 +32,99 @@
   animation: floatDown 3s ease-in-out infinite;
   transition: transform 0.3s ease;
 }
+
+/* Falling Zephyr logos animation */
+@keyframes fallDown {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.fallingLogos {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.fallingLogo {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 10px rgba(255, 192, 203, 0.5));
+  animation: fallDown linear infinite;
+}
+
+/* Zephyr logos (remaining 4) - slower speeds */
+.fallingLogo:nth-child(1) {
+  left: 8%;
+  animation-duration: 7s;
+  animation-delay: 2.5s;
+}
+
+.fallingLogo:nth-child(2) {
+  left: 18%;
+  animation-duration: 8s;
+  animation-delay: 4s;
+}
+
+.fallingLogo:nth-child(3) {
+  left: 82%;
+  animation-duration: 7.5s;
+  animation-delay: 0.8s;
+}
+
+.fallingLogo:nth-child(4) {
+  left: 92%;
+  animation-duration: 8.5s;
+  animation-delay: 3.5s;
+}
+
+/* Solana coins */
+.fallingCoin {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  opacity: 0.95;
+  animation: fallDown linear infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 192, 203, 0.5));
+}
+
+.fallingCoin:nth-child(5) {
+  left: 12%;
+  animation-duration: 6s;
+  animation-delay: 1.2s;
+}
+
+.fallingCoin:nth-child(6) {
+  left: 22%;
+  animation-duration: 4.4s;
+  animation-delay: 2.8s;
+}
+
+.fallingCoin:nth-child(7) {
+  left: 78%;
+  animation-duration: 5.5s;
+  animation-delay: 4.2s;
+}
+
+.fallingCoin:nth-child(8) {
+  left: 88%;
+  animation-duration: 4.9s;
+  animation-delay: 0.3s;
+}
