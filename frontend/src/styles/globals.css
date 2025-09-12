@@ -1,40 +1,121 @@
 @import "tailwindcss";
 @import "./variables.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-html,
-body,
-#root {
-  font-family: "Montserrat", sans-serif;
+* {
   margin: 0;
   padding: 0;
-  scroll-behavior: smooth;
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
-* {
-  font-family: "Montserrat", sans-serif;
-  scrollbar-color: var(--color-primary) var(--color-bg-primary);
-  scrollbar-width: 1vw;
-  margin: 0;
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-bg-primary);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  font-family: var(--font-main);
 }
 
 button,
 a {
-  cursor: pointer;
-  text-decoration: none;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-main);
 }
 
-::selection {
-  background-color: var(--color-primary);
-  color: var(--color-text-invert);
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
+
+main {
+  flex: 1;
+  position: relative;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 3rem 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  text-shadow: var(--hover-shadow);
+}
+
+section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+nav {
+  width: 80vw;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+
+.mobile-header {
+  display: none;
+  position: relative;
+  overflow: visible;
+}
+
+.burger-menu {
+  flex-direction: column;
+  gap: 2rem;
+  align-items: flex-start;
+  padding-block: 1rem;
+  border-radius: 1rem;
+}
+
+@media (max-width: 768px) {
+  .desktop-header {
+    display: none;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  nav {
+    width: 90vw;
+  }
+
+  footer a {
+    font-size: 1rem;
+  }
+}
+
+/* utility classes */
 
 .glass {
   background: var(--glass-bg);
@@ -43,62 +124,45 @@ a {
   border-radius: 1rem;
 }
 
-#nprogress .bar {
-  background: var(--color-accent);
-  box-shadow: 0 0 10px var(--color-accent);
-  height: 3px;
+.animate-spin {
+  animation: spin 0.4s linear infinite;
 }
 
-#nprogress .spinner-icon {
-  border-top-color: var(--color-accent);
-  border-left-color: var(--color-accent);
+.img-container {
+  position: relative;
 }
 
-#nprogress .peg {
-  display: block;
-  position: absolute;
-  right: 0px;
-  width: 100px;
+.img-container img {
+  object-fit: cover;
+  width: 100%;
   height: 100%;
-  box-shadow: 0 0 10px var(--color-accent), 0 0 5px var(--color-accent);
-  opacity: 1;
-  transform: rotate(3deg) translate(0px, -4px);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+.content {
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  max-width: 80vw;
+}
+
+@media (max-width: 768px) {
+  .img-container {
+    width: 150px;
+    height: 150px;
   }
-  to {
-    opacity: 1;
+
+  .content {
+    max-width: 90vw;
   }
 }
 
-.animate-fadeIn5 {
-  animation: fadeIn 0.5s ease;
-}
+/* animations */
 
-.animate-fadeIn8 {
-  animation: fadeIn 0.8s ease;
-}
-
-.description {
-  font-size: 1.2rem;
-  font-style: italic;
-  margin: 1rem 0;
-}
-
-.title {
-  font-size: 2.7rem;
-  font-weight: bold;
-  color: var(--color-primary);
-  margin-bottom: 1rem;
-}
-
-h3 {
-  font-weight: 600;
-}
-
-h2 {
-  font-weight: 700;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

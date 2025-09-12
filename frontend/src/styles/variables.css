@@ -1,57 +1,32 @@
 :root {
-  /* Light Theme - Solana Inspired */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8f9ff;
-  --color-surface-hover: #f0f2ff;
+  /* Dark Theme - DeFi Inspired */
+  --color-bg-primary: #0b0e11;
+  --color-bg-secondary: #151822;
+  --color-surface-hover: #1f1b2e;
 
   --color-primary: #9945ff;
   --color-primary-hover: #7c3aed;
   --color-accent: #14f195;
   --color-accent-hover: #00d4aa;
 
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #6b7280;
-  --color-text-invert: #ffffff;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d1d5db;
+  --color-text-invert: #0b0e11;
 
-  --color-border: #e5e7eb;
+  --color-border: #2a2f3b;
   --color-border-focus: #9945ff;
 
-  --color-success: #14f195;
-  --color-success-hover: #00d4aa;
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
 
   --shadow: 0 8px 32px rgba(153, 69, 255, 0.15);
   --hover-shadow: 0 12px 40px rgba(153, 69, 255, 0.25);
   --active-shadow: 0 4px 16px rgba(153, 69, 255, 0.3);
 
   /* Glass Effect Variables */
-  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-bg: rgba(21, 24, 34, 0.6);
   --glass-shadow: rgba(153, 69, 255, 0.1);
-  --glass-backdrop-blur: 20px;
-}
-
-.dark {
-  /* Dark Theme - Solana Inspired */
-  --color-bg-primary: #0a0a0b;
-  --color-bg-secondary: #131416;
-  --color-surface-hover: #1e1f23;
-
-  --color-primary: #9945ff;
-  --color-primary-hover: #b55cff;
-  --color-accent: #14f195;
-  --color-accent-hover: #2bffa8;  
-
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a1a1aa;
-  --color-text-invert: #0a0a0b;
-
-  --color-border: #27272a;
-  --color-border-focus: #14f195;
-
-  --color-success: #14f195;
-  --color-success-hover: #2bffa8;
-
-  /* Dark Glass Effect Variables */
-  --glass-bg: rgba(10, 10, 11, 0.4);
-  --glass-shadow: rgba(153, 69, 255, 0.2);
   --glass-backdrop-blur: 20px;
 }

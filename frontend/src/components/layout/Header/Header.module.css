@@ -1,4 +1,4 @@
-.header {
+/* .header {
   @apply flex flex-col justify-center items-center;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-backdrop-blur));
@@ -163,4 +163,4 @@
   .burgerButton {
     display: none;
   }
-}
+} */
