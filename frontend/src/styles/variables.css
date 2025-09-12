@@ -1,32 +1,45 @@
 :root {
-  /* Dark Theme - DeFi Inspired */
-  --color-bg-primary: #0b0e11;
-  --color-bg-secondary: #151822;
-  --color-surface-hover: #1f1b2e;
+  /* Dark Theme - Pink DeFi Inspired */
+  --color-bg-primary: #0f0a0d;
+  --color-bg-secondary: #1a131a;
+  --color-surface-hover: #2d1b2d;
 
-  --color-primary: #9945ff;
-  --color-primary-hover: #7c3aed;
-  --color-accent: #14f195;
-  --color-accent-hover: #00d4aa;
+  --color-primary: #ff69b4;
+  --color-primary-hover: #ff1493;
+  --color-accent: #ffc0cb;
+  --color-accent-hover: #ffb6c1;
 
   --color-text-primary: #ffffff;
   --color-text-secondary: #d1d5db;
-  --color-text-invert: #0b0e11;
+  --color-text-invert: #0f0a0d;
 
-  --color-border: #2a2f3b;
-  --color-border-focus: #9945ff;
+  --color-border: #3a2a3a;
+  --color-border-focus: #ff69b4;
 
   --color-success: #22c55e;
   --color-success-hover: #16a34a;
   --color-warning: #eab308;
   --color-error: #ef4444;
 
-  --shadow: 0 8px 32px rgba(153, 69, 255, 0.15);
-  --hover-shadow: 0 12px 40px rgba(153, 69, 255, 0.25);
-  --active-shadow: 0 4px 16px rgba(153, 69, 255, 0.3);
+  /* Pink-themed additional colors */
+  --color-pink-light: #ffc0cb;
+  --color-pink-medium: #ff69b4;
+  --color-pink-dark: #c71585;
+  --color-pink-accent: #ff1493;
+  --color-rose: #f43f5e;
+  --color-rose-hover: #e11d48;
+  
+  /* Gradient variables */
+  --gradient-primary: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+  --gradient-secondary: linear-gradient(135deg, #ffc0cb 0%, #ff69b4 100%);
+  --gradient-accent: linear-gradient(135deg, #ff1493 0%, #c71585 100%);
+
+  --shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  --hover-shadow: 0 12px 40px rgba(255, 105, 180, 0.25);
+  --active-shadow: 0 4px 16px rgba(255, 105, 180, 0.3);
 
   /* Glass Effect Variables */
-  --glass-bg: rgba(21, 24, 34, 0.6);
-  --glass-shadow: rgba(153, 69, 255, 0.1);
+  --glass-bg: rgba(26, 19, 26, 0.6);
+  --glass-shadow: rgba(255, 105, 180, 0.1);
   --glass-backdrop-blur: 20px;
 }
