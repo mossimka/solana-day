@@ -5,7 +5,7 @@ import styles from "./Logo.module.css";
 export default function Logo() {
   return (
     <Link href="/" className={styles.logo}>
-      <Image width={40} height={40} src={"/logo.webp"} alt="Logo" />
+      <Image width={50} height={50} src={"/logo.webp"} alt="Logo" />
     </Link>
   );
 }

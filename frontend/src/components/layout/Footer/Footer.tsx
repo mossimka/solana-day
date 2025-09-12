@@ -18,7 +18,7 @@ const Footer = () => {
             <Home size={18} />
             <span>Home</span>
           </Link>
-          <Link href="#about" className={Styles.navLink}>
+          <Link href="/platform" className={Styles.navLink}>
             <Info size={18} />
             <span>Platform</span>
           </Link>
