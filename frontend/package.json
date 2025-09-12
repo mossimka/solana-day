@@ -9,10 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "apexcharts": "^5.3.5",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.12",
     "next": "15.5.3",
     "react": "19.1.0",
+    "react-apexcharts": "^1.7.0",
     "react-dom": "19.1.0",
     "three": "^0.180.0",
     "vanta": "^0.5.24",
