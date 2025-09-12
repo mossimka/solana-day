@@ -21,7 +21,6 @@ const Header = () => {
           <li>
             <Link href="#try-now" className="flex items-center gap-5">
               <span>Sign in</span>
-
               <LogInIcon size={20} />
             </Link>
           </li>

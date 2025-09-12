@@ -11,12 +11,16 @@ const Footer = () => {
       <div className={Styles.container}>
         <div className='flex flex-col items-center'>
           <Image src="/logo.webp" alt="Zephyra Logo" width={200} height={100} className={Styles.logo}/>
-          <h1 className={Styles.title}>Zephyra</h1>
+          <h1 className={Styles.title}>Sephyra</h1>
         </div>
         <nav className={Styles.navigation}>
           <Link href="#top" className={Styles.navLink}>
             <Home size={18} />
             <span>Home</span>
+          </Link>
+          <Link href="#about" className={Styles.navLink}>
+            <Info size={18} />
+            <span>Platform</span>
           </Link>
           <Link href="#about" className={Styles.navLink}>
             <Info size={18} />
