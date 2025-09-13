@@ -205,8 +205,18 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
     },
     tooltip: {
       theme: 'dark',
-      custom: ({ seriesIndex, dataPointIndex, w }: any) => {
-        const data = w.globals.seriesCandleO[seriesIndex][dataPointIndex];
+      custom: ({ seriesIndex, dataPointIndex, w }: {
+        seriesIndex: number;
+        dataPointIndex: number;
+        w: {
+          globals: {
+            seriesCandleO: number[][];
+            seriesCandleH: number[][];
+            seriesCandleL: number[][];
+            seriesCandleC: number[][];
+          };
+        };
+      }) => {
         const o = w.globals.seriesCandleO[seriesIndex][dataPointIndex];
         const h = w.globals.seriesCandleH[seriesIndex][dataPointIndex];
         const l = w.globals.seriesCandleL[seriesIndex][dataPointIndex];
