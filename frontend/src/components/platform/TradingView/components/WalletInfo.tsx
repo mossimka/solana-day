@@ -1,7 +1,11 @@
 import React from "react";
 import { Wallet, Settings } from "lucide-react";
 
-export default function WalletInfo({ walletInfo }: { walletInfo: any }) {
+interface WalletInfo {
+  address: string;
+}
+
+export default function WalletInfo({ walletInfo }: { walletInfo: WalletInfo }) {
   return (
     <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
       <div className="flex items-center justify-between mb-4">

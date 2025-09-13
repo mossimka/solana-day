@@ -1,12 +1,30 @@
 import React from "react";
 import { Activity, MoreHorizontal } from "lucide-react";
 
+interface ActivePosition {
+  id: string;
+  type: string;
+  pnl: number;
+  lpPositionSize: string;
+  priceRange: string;
+  entryDate: string;
+  status: string;
+}
+
+interface RecentTrade {
+  pair: string;
+  type: string;
+  entry: number;
+  pnl: number;
+  timeAgo: string;
+}
+
 export default function PositionsSection({
   activePosition,
   recentTrades,
 }: {
-  activePosition: any;
-  recentTrades: any[];
+  activePosition: ActivePosition;
+  recentTrades: RecentTrade[];
 }) {
   return (
     <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">

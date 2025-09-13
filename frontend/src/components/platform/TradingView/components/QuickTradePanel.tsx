@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 
-export default function QuickTradePanel({ pairData }: { pairData: any }) {
+interface PairData {
+  currentPrice: number;
+}
+
+export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
   // QuickTradePanel owns all order inputs and logic. This avoids polluting the parent with transient form state.
   const [orderType, setOrderType] = useState<"Market" | "Limit" | "Stop">(
     "Market"
@@ -44,7 +48,7 @@ export default function QuickTradePanel({ pairData }: { pairData: any }) {
         <label className="block text-gray-400 text-sm mb-2">Order Type</label>
         <select
           value={orderType}
-          onChange={(e) => setOrderType(e.target.value as any)}
+          onChange={(e) => setOrderType(e.target.value as "Market" | "Limit" | "Stop")}
           className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-400"
         >
           <option value="Market">Market</option>

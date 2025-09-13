@@ -15,7 +15,7 @@ export interface Position {
   id: string;
   type: string;
   pnl: number;
-  lpPositionSize: number;
+  lpPositionSize: string;
   priceRange: string;
   entryDate: string;
   status: string;
@@ -53,7 +53,7 @@ export default function TradingView() {
     id: "74hc259KxZeE...",
     type: "DELTA NEUTRAL",
     pnl: 3199,
-    lpPositionSize: 211.78,
+    lpPositionSize: "211.78",
     priceRange: "0.1805 - 0.2207",
     entryDate: "2 days ago",
     status: "Active",

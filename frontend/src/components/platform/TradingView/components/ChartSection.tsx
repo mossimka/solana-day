@@ -112,7 +112,7 @@ export default function ChartSection({ pairSymbol }: Props) {
       grid: { borderColor: "#374151", strokeDashArray: 3 },
       tooltip: {
         theme: "dark",
-        custom: function ({ seriesIndex, dataPointIndex, w }: any) {
+        custom: function ({ seriesIndex, dataPointIndex, w }: { seriesIndex: number; dataPointIndex: number; w: { globals: { seriesCandleO: number[][]; seriesCandleH: number[][]; seriesCandleL: number[][]; seriesCandleC: number[][] } } }) {
           const o = w.globals.seriesCandleO[seriesIndex][dataPointIndex];
           const h = w.globals.seriesCandleH[seriesIndex][dataPointIndex];
           const l = w.globals.seriesCandleL[seriesIndex][dataPointIndex];

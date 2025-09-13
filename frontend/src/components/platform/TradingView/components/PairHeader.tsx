@@ -1,7 +1,17 @@
 import React from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
-export default function PairHeader({ pairData }: { pairData: any }) {
+interface PairData {
+  symbol: string;
+  currentPrice: number;
+  change24h: number;
+  changeAmount: number;
+  high24h: number;
+  low24h: number;
+  volume: number;
+}
+
+export default function PairHeader({ pairData }: { pairData: PairData }) {
   return (
     <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
       <div className="flex items-center justify-between">

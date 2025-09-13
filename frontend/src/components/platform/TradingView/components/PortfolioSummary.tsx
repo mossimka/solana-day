@@ -1,6 +1,13 @@
 import React from "react";
 
-export default function PortfolioSummary({ walletInfo }: { walletInfo: any }) {
+interface WalletInfo {
+  totalValue: number;
+  dailyChange: number;
+  solBalance: number;
+  usdcBalance: number;
+}
+
+export default function PortfolioSummary({ walletInfo }: { walletInfo: WalletInfo }) {
   return (
     <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
       <h2 className="text-xl font-bold text-white mb-6">Portfolio Summary</h2>
