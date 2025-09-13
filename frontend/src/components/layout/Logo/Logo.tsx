@@ -15,13 +15,13 @@ export default function Logo({ width, height, size = 50, className }: LogoProps)
   const logoHeight = height || size;
 
   return (
-    <Link href="/" className={`${styles.logo} ${className || ''}`}>
+    <button className={`${styles.logo} ${className || ''}`}>
       <Image 
         width={logoWidth} 
         height={logoHeight} 
         src={"/logo.webp"} 
         alt="Sephyra Logo" 
       />
-    </Link>
+    </button>
   );
 }

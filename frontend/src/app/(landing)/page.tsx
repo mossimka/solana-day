@@ -27,11 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
       address: false,
       telephone: false,
     },
-    metadataBase: new URL('https://sephyra.com'),
+    metadataBase: new URL('https://sephyra.top'),
     openGraph: {
       title: "Sephyra - Advanced DeFi Trading Platform",
       description: "Experience next-generation DeFi trading with advanced liquidity management and automated strategies on Solana.",
-      url: "https://sephyra.com",
+      url: "https://sephyra.top",
       siteName: "Sephyra",
       images: [
         {

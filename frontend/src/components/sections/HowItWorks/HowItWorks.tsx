@@ -21,7 +21,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       {/* Falling Zephyr logos */}
       <div className={styles.fallingLogos}>
         {/* 4 Zephyr logos */}

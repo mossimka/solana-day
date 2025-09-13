@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@xyflow/react": "^12.8.4",
     "apexcharts": "^5.3.5",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.12",
