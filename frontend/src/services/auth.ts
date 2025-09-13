@@ -1,10 +1,23 @@
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
 import { IAuthCredentials, ILoginResponse, IRegisterResponse } from "@/interfaces/IAuth";
 import { useAuthStore } from '@/stores/authStore';
 import axios from '@/lib/axios';
 import { tokenService } from './tokenService';
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+    status?: number;
+  };
+  message: string;
+}
+
+interface AuthenticatedFetchOptions {
+  method?: 'get' | 'post' | 'put' | 'delete';
+  data?: unknown;
+  headers?: Record<string, string>;
+}
 
 // Auth Service Class
 export class AuthService {
@@ -38,9 +51,8 @@ export class AuthService {
       return response.data;
     } catch (error: unknown) {
       console.error("Registration error:", error);
-      const message = error instanceof Error && 'response' in error 
-        ? (error as any).response?.data?.message || error.message 
-        : "Registration failed";
+      const apiError = error as ApiError;
+      const message = apiError.response?.data?.message || apiError.message || "Registration failed";
       throw new Error(message);
     }
   }
@@ -60,9 +72,8 @@ export class AuthService {
       return data;
     } catch (error: unknown) {
       console.error("Login error:", error);
-      const message = error instanceof Error && 'response' in error 
-        ? (error as any).response?.data?.message || error.message 
-        : "Login failed";
+      const apiError = error as ApiError;
+      const message = apiError.response?.data?.message || apiError.message || "Login failed";
       throw new Error(message);
     }
   }
@@ -104,9 +115,10 @@ export class AuthService {
   }
 
   // Make authenticated API call using axios
-  async authenticatedFetch(endpoint: string, options: any = {}): Promise<any> {
+  async authenticatedFetch(endpoint: string, options: AuthenticatedFetchOptions = {}): Promise<unknown> {
     try {
-      const token = tokenService.requireAuth(); // This will throw if not authenticated
+      // This will throw if not authenticated
+      tokenService.requireAuth();
       
       const config = {
         ...options,
@@ -135,9 +147,10 @@ export class AuthService {
       }
 
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If unauthorized, clear auth state
-      if (error.response?.status === 401) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 401) {
         useAuthStore.getState().logout();
         throw new Error("Authentication expired. Please login again.");
       }

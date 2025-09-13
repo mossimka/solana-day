@@ -10,7 +10,7 @@ export interface UseAuthReturn {
 }
 
 export function useAuth(): UseAuthReturn {
-  const { isAuthenticated, token, logout: storeLogout } = useAuthStore();
+  const { isAuthenticated, token } = useAuthStore();
 
   const login = async (username: string, password: string): Promise<void> => {
     await authService.login({ username, password });
