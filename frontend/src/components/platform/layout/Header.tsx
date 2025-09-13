@@ -1,6 +1,7 @@
 import Logo from "@/components/layout/Logo/Logo";
 import { ChartAreaIcon, SettingsIcon } from "lucide-react";
 import Link from "next/link";
+import SignOutButton from "../SignOutButton/SignOutButton";
 
 const Header = () => {
   return (
@@ -33,6 +34,9 @@ const Header = () => {
               <span className="cursor-pointer">Settings</span>
               <SettingsIcon size={20} className="text-[var(--color-primary)]" />
             </Link>
+          </li>
+          <li className="flex items-center list-none">
+            <SignOutButton />
           </li>
         </ul>
       </nav>

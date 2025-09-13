@@ -6,6 +6,11 @@ export interface IUser {
 
 export interface ILoginResponse {
   accessToken: string;
+  user: {
+    id: number;
+    username: string;
+    createdAt: string;
+  };
 }
 
 export interface IRegisterResponse {

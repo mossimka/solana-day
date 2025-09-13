@@ -6,10 +6,11 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       isAuthenticated: false,
-      token: null,
+      token: null, // This will no longer store the actual token
 
-      login: (token: string) => {
-        set({ isAuthenticated: true, token });
+      login: () => {
+        // We don't store the actual token anymore, just the auth state
+        set({ isAuthenticated: true, token: null });
       },
 
       logout: () => {
@@ -18,8 +19,10 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth',
-      // Only persist isAuthenticated, not the token (token comes from httpOnly cookies)
-      partialize: (state) => ({ isAuthenticated: state.isAuthenticated }),
+      // Only persist isAuthenticated state, tokens are in httpOnly cookies
+      partialize: (state) => ({ 
+        isAuthenticated: state.isAuthenticated
+      }),
     }
   )
 );

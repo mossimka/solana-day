@@ -29,17 +29,28 @@ export class AuthController {
         return res.status(400).json({ message: 'Username and password are required' });
       }
       
-      const token = await this.authService.login(username, password);
+      const tokens = await this.authService.login(username, password);
       
-      // Set httpOnly cookie for security
-      res.cookie('refreshToken', token.accessToken, {
+      // Set both tokens as httpOnly cookies for maximum security
+      res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
-      res.json(token);
+      // Return only user info (no tokens in response body)
+      res.json({
+        message: 'Login successful',
+        user: tokens.user
+      });
     } catch (error) {
       if (error instanceof Error) {
         res.status(401).json({ message: error.message }); // 401 Unauthorized for bad credentials
@@ -51,7 +62,26 @@ export class AuthController {
 
   async logout(req: Request, res: Response) {
     try {
-      // Clear the httpOnly cookie
+      const refreshToken = req.cookies.refreshToken;
+      
+      if (refreshToken) {
+        try {
+          // Decode refresh token to get user ID and invalidate it
+          const jwt = require('jsonwebtoken');
+          const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+          const decoded = jwt.verify(refreshToken, refreshSecret) as any;
+          
+          if (decoded.userId) {
+            await this.authService.logout(decoded.userId);
+          }
+        } catch (error) {
+          // If token is invalid, just continue with clearing cookies
+          console.error('Error invalidating refresh token:', error);
+        }
+      }
+      
+      // Clear both httpOnly cookies
+      res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
       res.json({ message: 'Logged out successfully' });
     } catch (error) {
@@ -71,13 +101,30 @@ export class AuthController {
         return res.status(401).json({ message: 'Refresh token not found' });
       }
 
-      // You would validate the refresh token here
-      // For now, we'll just return a new access token
-      // In a real app, you'd verify the refresh token and issue a new access token
+      const tokens = await this.authService.refreshToken(refreshToken);
       
-      const newToken = await this.authService.refreshToken(refreshToken);
-      res.json({ accessToken: newToken });
+      // Set new tokens as httpOnly cookies
+      res.cookie('accessToken', tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // Return success message (no tokens in response body)
+      res.json({ message: 'Tokens refreshed successfully' });
     } catch (error) {
+      // Clear invalid refresh token cookie
+      res.clearCookie('refreshToken');
+      res.clearCookie('accessToken');
+      
       if (error instanceof Error) {
         res.status(401).json({ message: error.message });
       } else {

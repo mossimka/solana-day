@@ -1,5 +1,6 @@
 import { IAuthCredentials, ILoginResponse, IRegisterResponse } from "@/interfaces/IAuth";
 import { useAuthStore } from '@/stores/authStore';
+import { useUserStore } from '@/stores/userStore';
 import axios from '@/lib/axios';
 import { tokenService } from './tokenService';
 
@@ -17,6 +18,7 @@ interface AuthenticatedFetchOptions {
   method?: 'get' | 'post' | 'put' | 'delete';
   data?: unknown;
   headers?: Record<string, string>;
+  _retry?: boolean;
 }
 
 // Auth Service Class
@@ -66,8 +68,11 @@ export class AuthService {
       
       const data = response.data;
       
-      // Store token in Zustand store
-      useAuthStore.getState().login(data.accessToken);
+      // Store authentication state (tokens are in httpOnly cookies)
+      useAuthStore.getState().login();
+      
+      // Store user information in user store
+      useUserStore.getState().setUser(data.user);
       
       return data;
     } catch (error: unknown) {
@@ -91,12 +96,15 @@ export class AuthService {
     } finally {
       // Clear local auth state
       useAuthStore.getState().logout();
+      // Clear user data
+      useUserStore.getState().clearUser();
     }
   }
 
   // Get current token
   getToken(): string | null {
-    return tokenService.getAccessToken();
+    // Tokens are in httpOnly cookies, not accessible from JS
+    return null;
   }
 
   // Check if user is authenticated
@@ -106,19 +114,19 @@ export class AuthService {
 
   // Get authenticated headers for API calls
   getAuthHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {
+    // No need for Authorization header, cookies are sent automatically
+    return {
       "Content-Type": "application/json",
     };
-
-    const authHeader = tokenService.getAuthHeader();
-    return { ...headers, ...authHeader };
   }
 
   // Make authenticated API call using axios
   async authenticatedFetch(endpoint: string, options: AuthenticatedFetchOptions = {}): Promise<unknown> {
     try {
-      // This will throw if not authenticated
-      tokenService.requireAuth();
+      // Check if user is authenticated
+      if (!this.isAuthenticated()) {
+        throw new Error("User is not authenticated");
+      }
       
       const config = {
         ...options,
@@ -126,7 +134,7 @@ export class AuthService {
           ...this.getAuthHeaders(),
           ...options.headers,
         },
-        withCredentials: true,
+        withCredentials: true, // Always send cookies
       };
 
       let response;
@@ -148,11 +156,18 @@ export class AuthService {
 
       return response.data;
     } catch (error: unknown) {
-      // If unauthorized, clear auth state
+      // If unauthorized, try to refresh token once
       const apiError = error as ApiError;
-      if (apiError.response?.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("Authentication expired. Please login again.");
+      if (apiError.response?.status === 401 && !options._retry) {
+        try {
+          await tokenService.refreshAccessToken();
+          // Retry the request once with refreshed cookies
+          return this.authenticatedFetch(endpoint, { ...options, _retry: true });
+        } catch {
+          // If refresh fails, clear auth state
+          useAuthStore.getState().logout();
+          throw new Error("Authentication expired. Please login again.");
+        }
       }
       throw error;
     }
