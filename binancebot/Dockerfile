@@ -7,17 +7,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install all dependencies (needed for development mode)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
-
 # Expose port 8001 (matches the PORT in .env)
 EXPOSE 8001
 
-# Start the application in development mode
+# Start the application in development mode (no build needed)
 CMD ["npm", "run", "start:dev"]
