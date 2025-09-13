@@ -741,7 +741,7 @@ export class BinanceService implements OnModuleInit {
         this.logger.log('Attempting to restore active hedge states from liquidity-bot...');
         try {
             const liquidityBotHost = this.configService.get<string>('LIQUIDITY_BOT_HOST', 'localhost:3003');
-            const response = await axios.get(`http://${liquidityBotHost}/liquidity/internal/active-for-hedging`);
+            const response = await axios.get(`http://${liquidityBotHost}/api/liquidity/internal/active-for-hedging`);
             
             const positionsToRestore: any[] = response.data;
             this.logger.log(`Found ${positionsToRestore.length} positions to restore.`);
@@ -1349,7 +1349,7 @@ export class BinanceService implements OnModuleInit {
         try {
             const liquidityBotHost = this.configService.get<string>('LIQUIDITY_BOT_HOST');
             // Предполагается, что вы создадите такой эндпоинт в liquidity-bot
-            await axios.post(`http://${liquidityBotHost}/liquidity/internal/positions/${positionId}/update-state`, state);
+            await axios.post(`http://${liquidityBotHost}/api/liquidity/internal/positions/${positionId}/update-state`, state);
             this.logger.log(`[${positionId}] Successfully saved hedge state to DB.`);
         } catch (error) {
             this.logger.error(`[${positionId}] FAILED to save hedge state.`, error.message);
