@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import Net from "@/components/ui/Net/Net";
 
 export default function PlatformPage() {
@@ -9,6 +11,7 @@ export default function PlatformPage() {
           <h1 className="text-4xl font-bold">Platform Page</h1>
           <p className="mt-4 text-lg">Welcome to the <span className="text-accent font-bold text-xl">Sephyra</span> platform page!</p>
           <button className="button">
+            <Link href="/platform/trading"></Link>
             Start now!
           </button>
         </div>
