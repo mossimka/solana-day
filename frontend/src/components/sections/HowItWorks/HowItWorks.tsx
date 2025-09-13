@@ -49,7 +49,7 @@ export default function HowItWorks() {
         ))}
       </div>
 
-      <section className="relative z-10 flex flex-col items-center gap-12 px-4 py-16">
+      <section className="relative z-10 flex flex-col items-center gap-12 px-4 py-16" id="how-it-works">
         <h1 className="text-5xl font-bold text-center">How It Works</h1>
         <p className="max-w-3xl mx-auto text-center text-xl text-gray-400">
           Getting started with Sephyra is simple and straightforward. Follow these

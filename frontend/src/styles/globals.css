@@ -28,6 +28,7 @@ body,
   padding: 0;
   box-sizing: border-box;
   scrollbar-color: var(--color-accent) var(--glass-bg);
+  scroll-behavior: smooth;
 }
 
 html {

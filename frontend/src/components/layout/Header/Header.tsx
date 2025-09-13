@@ -12,8 +12,10 @@ const Header = () => {
       <nav className={`${Styles.desktopHeader} glass`}>
         <ul className={Styles.nav}>
           <li className={Styles.navItem}>
-            <Logo />
-            <h1 className="font-bold text-4xl">Sephyra</h1>
+            <Link href="#top" className="flex items-center space-x-1">
+              <Logo />
+              <h1 className="font-bold text-4xl cursor-pointer">Sephyra</h1>
+            </Link>
           </li>
           <li className={Styles.navItem}>
             <Link href="/platform" className={Styles.navLink}>

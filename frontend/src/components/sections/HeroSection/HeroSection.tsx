@@ -20,7 +20,7 @@ export default function HeroSection() {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+      <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10" id="top">
         <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white">
           Sephyra is here!
         </h1>

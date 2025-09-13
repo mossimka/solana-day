@@ -8,8 +8,10 @@ const Header = () => {
       <nav className="bg-[var(--glass-bg)] backdrop-blur-[var(--glass-backdrop-blur)] border border-[var(--color-border)] rounded-2xl p-4 md:px-8">
         <ul className="flex justify-around items-center w-full list-none m-0 p-0">
           <li className="flex items-center list-none">
-            <Logo />
-            <h1 className="font-bold text-2xl">Sephyra</h1>
+            <Link href="/" className="flex items-center space-x-1">
+              <Logo />
+              <h1 className="font-bold text-4xl cursor-pointer">Sephyra</h1>
+            </Link>
           </li>
           <li className="flex items-center list-none ">
             <Link
