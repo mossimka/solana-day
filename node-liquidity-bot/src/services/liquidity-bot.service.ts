@@ -1353,7 +1353,7 @@ async stopBinance() {
 
         if (params.legs && Array.isArray(params.legs) && params.legs.length > 0) {
             console.log(`[SIMULATION] Detected DUAL-LEG (volatile/volatile) simulation request.`);
-            endpoint = 'hedging/start-delta-neutral-simulation';
+            endpoint = 'hedging/start-dual-delta-neutral-simulation';
         } else {
             console.log(`[SIMULATION] Detected SINGLE-LEG (volatile/stable) simulation request.`);
             endpoint = 'hedging/start-delta-neutral-simulation'; 

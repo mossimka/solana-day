@@ -1,0 +1,19 @@
+curl -X POST \
+  http://localhost:8000/api/liquidity/start-hedge-simulation-for-existing \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoibW9zc2lta2EiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzU3Nzg3MDI4LCJleHAiOjE3NTc3ODc5Mjh9.8MNmRkbfbCP08XCi3vJqiGiDtP_FknwOUXEQsjj3EUI' \
+  -d '{
+    "positionId": "GW8pvy9WUmU5yGXjTzZqk5LgTbFnjNC6GxWCRZwMrDFG",
+    "pairName": "RAY/WSOL",
+    "totalValue": 145884.32,
+    "legs": [
+      {
+        "tradingPair": "RAYUSDT",
+        "leverage": 10
+      },
+      {
+        "tradingPair": "SOLUSDT",
+        "leverage": 10
+      }
+    ]
+  }'
