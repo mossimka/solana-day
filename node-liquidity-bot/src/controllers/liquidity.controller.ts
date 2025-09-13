@@ -3,7 +3,6 @@ import { LiquidityBotService } from '../services/liquidity-bot.service';
 import { UserParams } from '../interfaces/user-params.interface';
 import { OrderRequest } from '../interfaces/futures.interface';
 import {
-  AutomatedRangeBody,
   HedgePreviewBody,
   RecalculatePlanBody,
   SetupPositionBody,
@@ -146,15 +145,6 @@ export class LiquidityController {
             this.handleError(res, error);
         }
     }
-
-    async getHighAprPools(req: Request, res: Response) {
-        try {
-            const pools = await this.liquidityBotService.getHighAprPools();
-            res.json(pools);
-        } catch (error) {
-            this.handleError(res, error);
-        }
-    }
     
     async getChartData(req: Request, res: Response) {
         try {
@@ -232,19 +222,6 @@ export class LiquidityController {
         }
     }
 
-    async getAutomatedRange(req: Request, res: Response) {
-        try {
-            const body: AutomatedRangeBody = req.body;
-            if (!body.poolId || typeof body.initialLpValueUsd !== 'number') {
-                return res.status(400).json({ message: 'poolId (string) and initialLpValueUsd (number) are required.' });
-            }
-            const result = await this.liquidityBotService.getAutomatedRange(body.poolId, body.initialLpValueUsd);
-            res.json(result);
-        } catch(error) {
-            this.handleError(res, error);
-        }
-    }
-
     async startHedgeSimulationForExisting(req: Request, res: Response) {
         try {
             if (!req.body.positionId) return res.status(400).json({ message: 'positionId is required.' });
@@ -308,13 +285,9 @@ export class LiquidityController {
     
     async getFuturesAccountBalance(req: Request, res: Response) {
         try {
-            const exchange = req.params.exchange as 'binance' | 'bybit';
-            if (exchange !== 'binance' && exchange !== 'bybit') {
-                return res.status(400).json({ message: 'Invalid exchange specified. Use "binance" or "bybit".' });
-            }
-            const result = await this.liquidityBotService.getFuturesAccountBalance(exchange);
+            const result = await this.liquidityBotService.getFuturesAccountBalance();
             res.json(result);
-        } catch(error) {
+        } catch (error) {
             this.handleError(res, error);
         }
     }

@@ -32,7 +32,6 @@ router.get('/pool/:poolId', authMiddleware, (req, res) => liquidityController.ge
 router.get('/pool/balance/:poolId', authMiddleware, (req, res) => liquidityController.getPoolBalance(req, res));
 router.get('/token/price', authMiddleware, (req, res) => liquidityController.getTokenPrice(req, res));
 router.get('/valid-pairs', authMiddleware, (req, res) => liquidityController.getValidPairs(req, res));
-router.get('/high-apr-pools', authMiddleware, (req, res) => liquidityController.getHighAprPools(req, res));
 router.get('/chart-data', authMiddleware, (req, res) => liquidityController.getChartData(req, res));
 
 router.post('/private-key', authMiddleware, (req, res) => liquidityController.savePrivateKey(req, res));
@@ -42,7 +41,6 @@ router.post('/order-settings', authMiddleware, (req, res) => liquidityController
 
 router.post('/hedge-preview', authMiddleware, (req, res) => liquidityController.getHedgePreview(req, res));
 router.post('/recalculate-plan', authMiddleware, (req, res) => liquidityController.recalculateHedgePlan(req, res));
-router.post('/automated-range', authMiddleware, (req, res) => liquidityController.getAutomatedRange(req, res));
 router.post('/start-hedge-simulation-for-existing', authMiddleware, (req, res) => liquidityController.startHedgeSimulationForExisting(req, res));
 router.post('/validate-delta-neutral', authMiddleware, (req, res) => liquidityController.validateDeltaNeutralValue(req, res));
 router.post('/positions/:positionId/enable-rebalance', authMiddleware, (req, res) => liquidityController.enableRebalance(req, res));
@@ -50,7 +48,7 @@ router.post('/positions/:positionId/disable-rebalance', authMiddleware, (req, re
 
 router.post('/binance/start', authMiddleware, (req, res) => liquidityController.startBinance(req, res));
 router.post('/binance/stop', authMiddleware, (req, res) => liquidityController.stopBinance(req, res));
-router.get('/futures/balance/:exchange', authMiddleware, (req, res) => liquidityController.getFuturesAccountBalance(req, res));
+router.get('/futures/balance', authMiddleware, (req, res) => liquidityController.getFuturesAccountBalance(req, res));
 
 router.get('/internal/active-for-hedging', (req, res) => liquidityController.getAllActiveForHedging(req, res));
 router.post('/internal/rebalance-completed', (req, res) => liquidityController.handleRebalanceCompletion(req, res));

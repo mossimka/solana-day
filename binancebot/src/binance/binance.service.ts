@@ -128,110 +128,6 @@ export class BinanceService implements OnModuleInit {
         }
     }
 
-    private _calculateSingleLegPlan(
-        tradingPair: string,
-        valueForLeg: number, 
-        absoluteRange: { lower: string; upper: string },
-        entryPrice: number,
-        customBaseHedgeAmount?: number,
-        customLeverage?: number
-    ): HedgeLegPlan { 
-        this.logger.log(`[Leg Calc] Расчет для ${tradingPair}. Стоимость: ${valueForLeg.toFixed(2)}, Цена входа: ${entryPrice}`);
-
-        const absoluteLowerPrice = parseFloat(absoluteRange.lower);
-        const absoluteUpperPrice = parseFloat(absoluteRange.upper);
-
-        const { quantityPrecision, pricePrecision } = this.pairPrecisions.get(tradingPair) || {
-            quantityPrecision: 3,
-            pricePrecision: 4
-        };
-
-        const rangeMidpoint = (absoluteUpperPrice + absoluteLowerPrice) / 2;
-        if (rangeMidpoint <= 0 || absoluteLowerPrice >= rangeMidpoint) {
-            throw new BadRequestException(`Неверный диапазон для ${tradingPair}: середина должна быть больше нуля и больше нижней границы.`);
-        }
-        const priceDropPercentage = (rangeMidpoint - absoluteLowerPrice) / rangeMidpoint;
-
-        const hedgeRangeLower = entryPrice * (1 - priceDropPercentage);
-        const hedgeRangeUpper = entryPrice * (1 + priceDropPercentage);
-
-        let leverage = customLeverage && Number(customLeverage) > 0
-            ? Number(customLeverage)
-            : Math.ceil(1 / priceDropPercentage);
-
-        let baseHedgeAmount = customBaseHedgeAmount && Number(customBaseHedgeAmount) > 0
-            ? parseFloat(customBaseHedgeAmount as any)
-            : (valueForLeg / entryPrice) * 0.20;
-
-        const zoneWeights = [5, 10, 20, 40, 80];
-        const hedgePartCount = 5;
-        const priceStep = (entryPrice - hedgeRangeLower) / hedgePartCount;
-
-        const tempZones: { price: number; weight: number; zone: number }[] = [];
-        for (let i = 0; i < hedgePartCount; i++) {
-            const zonePrice = entryPrice - (priceStep * (i + 1));
-            tempZones.push({ price: zonePrice, weight: zoneWeights[i], zone: i + 1 });
-        }
-        const zone5Price = tempZones[4].price;
-
-        const targetPnl = valueForLeg * 0.20;
-        this.logger.log(`[Leg Calc - ${tradingPair}] Целевая PnL установлена в ${targetPnl.toFixed(2)} USDT.`);
-
-        const baseHedgePnl = (entryPrice - zone5Price) * baseHedgeAmount;
-        let requiredPnlFromZones = targetPnl - baseHedgePnl;
-        if (requiredPnlFromZones < 0) {
-            requiredPnlFromZones = 0;
-        }
-
-        const weightsForProfitDistribution = zoneWeights.slice(0, 4);
-        const totalWeight = weightsForProfitDistribution.reduce((sum, w) => sum + w, 0);
-
-        const calculatedZones: { zone: number, entryPrice: number, quantity: number }[] = [];
-        let previousZoneQuantity = 0;
-
-        for (let i = 0; i < hedgePartCount; i++) {
-            const zoneInfo = tempZones[i];
-            let quantity = 0;
-
-            if (i < 4) {
-                if (requiredPnlFromZones > 0 && totalWeight > 0) {
-                    const pnlForThisZone = requiredPnlFromZones * (zoneInfo.weight / totalWeight);
-                    const priceDifference = zoneInfo.price - zone5Price;
-
-                    if (priceDifference > 0) {
-                        quantity = pnlForThisZone / priceDifference;
-                    }
-                }
-            } else {
-                const weightRatio = zoneInfo.weight / tempZones[i - 1].weight;
-                quantity = previousZoneQuantity * weightRatio;
-            }
-
-            calculatedZones.push({
-                zone: zoneInfo.zone,
-                entryPrice: zoneInfo.price,
-                quantity: quantity,
-            });
-            previousZoneQuantity = quantity;
-        }
-
-        const roundedBaseHedgeAmount = parseFloat(baseHedgeAmount.toFixed(quantityPrecision));
-        const roundedZones = calculatedZones.map(zone => ({
-            ...zone,
-            entryPrice: parseFloat(zone.entryPrice.toFixed(pricePrecision)),
-            quantity: parseFloat(zone.quantity.toFixed(quantityPrecision)),
-        }));
-
-        return {
-            tradingPair: tradingPair,
-            leverage,
-            range: { lower: hedgeRangeLower, upper: hedgeRangeUpper },
-            baseHedgeAmount: roundedBaseHedgeAmount,
-            targetPnl: targetPnl,
-            zones: roundedZones,
-        };
-    }
-
     private async getPositionRisk(symbol: string, positionState?: HedgePositionState): Promise<any[]> {
         if (positionState && positionState.isSimulation) {
             this.logger.warn(`[SIMULATION] Returning faked position risk for ${symbol}`);
@@ -358,58 +254,18 @@ export class BinanceService implements OnModuleInit {
 
     private handlePriceUpdate(tradingPair: string, currentPrice: number) {
         this.activeHedgingPositions.forEach((positionState, positionId) => {
-            // Проверяем, что позиция активна
             if (!positionState.isActive && !positionState.isSimulation) return;
 
-            // Находим "ногу", которой принадлежит этот tradingPair
             const targetLeg = positionState.legs.find(leg => leg.tradingPair === tradingPair);
 
-            // Если нашли, запускаем проверку зон именно для этой "ноги"
-            if (targetLeg) {
-                this.checkHedgeZones(positionId, positionState, targetLeg, currentPrice);
+            if (targetLeg && positionState.strategyType === 'DELTA_NEUTRAL') {
+            this.checkDeltaNeutralHedge(positionId, positionState).catch(error => {
+                this.logger.error(`Error checking delta neutral hedge for position ${positionId}:`, error);
+            });
             }
         });
     }
 
-    public async calculateHedgePlan(params: CalculationParams): Promise<HedgePlan> {
-        this.logger.log(`Получен запрос на расчет плана. Стратегия: ${params.strategyType}, Пары: ${params.legs.map(l => l.binanceSymbol).join(', ')}`);
-
-        const totalValueNum = parseFloat(params.totalValue);
-        if (isNaN(totalValueNum) || totalValueNum <= 0) {
-            throw new BadRequestException('Некорректное значение totalValue.');
-        }
-
-        const legPlans: HedgeLegPlan[] = [];
-
-        // Асинхронно получаем текущие цены для всех "ног"
-        const pricePromises = params.legs.map(leg => this.getLastPrice(leg.binanceSymbol));
-        const currentPrices = await Promise.all(pricePromises);
-
-        // Определяем стоимость, приходящуюся на каждую "ногу"
-        const valuePerLeg = totalValueNum / params.legs.length;
-
-        // Итерируемся и считаем план для каждой "ноги"
-        for (let i = 0; i < params.legs.length; i++) {
-            const legParams = params.legs[i];
-            const currentPrice = currentPrices[i];
-
-            const singleLegPlan = this._calculateSingleLegPlan(
-                legParams.binanceSymbol,
-                valuePerLeg,
-                legParams.range,
-                currentPrice
-            );
-            legPlans.push(singleLegPlan);
-        }
-
-        // Собираем итоговый HedgePlan
-        return {
-            strategyType: params.strategyType,
-            totalValue: totalValueNum,
-            pairName: params.pairName,
-            legs: legPlans,
-        };
-    }
     private async queryOrder(symbol: string, orderId: number, isSimulation: boolean = false): Promise<OrderResult> {
         if (isSimulation) {
             if (this.simulatedOrders.has(orderId)) {
@@ -421,184 +277,6 @@ export class BinanceService implements OnModuleInit {
 
         this.logger.log(`Querying REAL order status for orderId: ${orderId}`);
         return this.makeRequest<OrderResult>('/fapi/v1/order', 'GET', { symbol, orderId });
-    }
-
-    async startHedgingSimulation(positionId: string, plan: HedgePlan) {
-        this.logger.warn(`[SIMULATION] Starting hedge simulation for position: ${positionId}`);
-        if (!plan || !plan.legs || plan.legs.length === 0) {
-            throw new BadRequestException('Hedge plan with legs is required for simulation.');
-        }
-
-        const allLegsState: HedgeLegState[] = [];
-        const historyLog: string[] = [`[${new Date().toISOString()}] SIMULATION Started with ${plan.legs.length} leg(s).`];
-
-        for (const legPlan of plan.legs) {
-            const { tradingPair, leverage, baseHedgeAmount, zones } = legPlan;
-            const precision = this.pairPrecisions.get(tradingPair)?.quantityPrecision ?? 3;
-            const quantityFormatted = Number(baseHedgeAmount).toFixed(precision);
-
-            let executionPrice = 0;
-            let executedQty = 0;
-            let initialFee = 0;
-
-            try {
-                await this.changeLeverage(tradingPair, leverage, true);
-                const initialResponse = await this.placeOrder({
-                    symbol: tradingPair, side: 'SELL', type: 'MARKET', quantity: quantityFormatted
-                }, true);
-                const verifiedOrderResult = await this.queryOrder(tradingPair, initialResponse.orderId, true);
-
-                if (verifiedOrderResult && parseFloat(verifiedOrderResult.executedQty) > 0) {
-                    executionPrice = parseFloat(verifiedOrderResult.avgPrice);
-                    executedQty = parseFloat(verifiedOrderResult.executedQty);
-                    initialFee = executionPrice * executedQty * this.TAKER_FEE_RATE;
-                    historyLog.push(` -> Leg ${tradingPair}: Base hedge placed: ${executedQty.toFixed(precision)} at ≈${executionPrice}. Fee: ≈${initialFee.toFixed(4)} USD`);
-                }
-            } catch (error) {
-                this.logger.error(`[SIMULATION] Error during initial hedge placement for ${tradingPair}`, error);
-            }
-
-            this.subscribeToPrice(tradingPair);
-
-            const legOrderSettings: AdaptiveOrderSetting[] = zones.map(z => ({
-                zone: z.zone, orderPrice: z.entryPrice, amount: z.quantity,
-                originalAmount: z.quantity, amountToFill: z.quantity, amountFilledInZone: 0,
-                isProcessed: false, timesEntered: 0,
-            }));
-
-            allLegsState.push({
-                tradingPair: tradingPair,
-                leverage: leverage,
-                currentHedgeAmount: executedQty,
-                lastAveragePrice: executedQty > 0 ? executionPrice : 0,
-                totalRealizedPnl: 0,
-                totalFeesPaid: initialFee,
-                ordersSettings: legOrderSettings,
-            });
-        }
-
-        // ИСПРАВЛЕНИЕ: Создаем состояние с обязательным полем legs
-        const newState: HedgePositionState = {
-            strategyType: plan.strategyType,
-            pairName: plan.pairName,
-            totalValue: plan.totalValue,
-            isActive: true,
-            history: historyLog,
-            isSimulation: true,
-            legs: allLegsState,
-        };
-
-        this.activeHedgingPositions.set(positionId, newState);
-
-        await this.saveHedgeState(positionId, newState);
-        this.logger.log(`[SIMULATION] Hedging for ${positionId} initialized successfully.`);
-        return { message: `Simulation started for ${positionId}` };
-    }
-
-    async startHedgingProcess(
-        positionId: string,
-        pairName: string,       // e.g., "SOL/USDT" or "PYTH/JUP"
-        totalValueStr: string,  // Общая стоимость для справки
-        range: { lower: string; upper: string }, // Этот параметр теперь используется в основном для логов/справки
-        planFromFrontend: HedgePlan
-    ) {
-        if (!planFromFrontend || !planFromFrontend.legs || planFromFrontend.legs.length === 0) {
-            throw new BadRequestException('План хеджирования (HedgePlan) с "ногами" (legs) обязателен для запуска.');
-        }
-
-        this.logger.log(`[${positionId}] Запуск процесса хеджирования по стратегии ${planFromFrontend.strategyType} для пары ${pairName}`);
-
-        const allLegsState: HedgeLegState[] = [];
-        const historyLog: string[] = [`[${new Date().toISOString()}] Process started with ${planFromFrontend.legs.length} leg(s).`];
-
-        // --- НАЧАЛО ЦИКЛА ПО "НОГАМ" ---
-        for (const legPlan of planFromFrontend.legs) {
-            const { tradingPair, leverage, baseHedgeAmount, zones } = legPlan;
-            this.logger.log(`[${positionId}] Processing leg: ${tradingPair}`);
-
-            const precision = this.pairPrecisions.get(tradingPair)?.quantityPrecision ?? 3;
-            const quantityFormatted = Number(baseHedgeAmount).toFixed(precision);
-
-            let executionPrice: number = 0;
-            let executedQty: number = 0;
-            let initialFee: number = 0;
-
-            try {
-                // 1. Устанавливаем плечо для данной "ноги"
-                await this.changeLeverage(tradingPair, leverage);
-
-                // 2. Размещаем базовый хедж-ордер для данной "ноги"
-                const initialResponse = await this.placeOrder({
-                    symbol: tradingPair,
-                    side: 'SELL',
-                    type: 'MARKET',
-                    quantity: quantityFormatted
-                });
-
-                await new Promise(resolve => setTimeout(resolve, 500)); // Пауза для исполнения ордера
-
-                // 3. Запрашиваем итоговый статус ордера
-                const verifiedOrderResult = await this.queryOrder(tradingPair, initialResponse.orderId);
-
-                if (verifiedOrderResult && parseFloat(verifiedOrderResult.executedQty) > 0) {
-                    executionPrice = parseFloat(verifiedOrderResult.avgPrice);
-                    executedQty = parseFloat(verifiedOrderResult.executedQty);
-                    initialFee = executionPrice * executedQty * this.TAKER_FEE_RATE;
-                    historyLog.push(` -> Leg ${tradingPair}: Base hedge placed: ${executedQty.toFixed(precision)} at ≈${executionPrice.toFixed(4)}. Fee: ≈${initialFee.toFixed(4)} USD`);
-                } else {
-                    this.logger.warn(`[${positionId}] Verified hedge order for ${tradingPair} was not filled. Initializing with 0 amount.`);
-                    historyLog.push(` -> Leg ${tradingPair}: Base hedge FAILED to fill.`);
-                }
-
-            } catch (error) {
-                this.logger.error(`[${positionId}] FAILED to place or verify base hedge for ${tradingPair}. Initializing with 0 amount.`, error);
-                historyLog.push(` -> Leg ${tradingPair}: Base hedge FAILED with error.`);
-            }
-
-            // 4. Подписываемся на цену для данной "ноги"
-            this.subscribeToPrice(tradingPair);
-
-            // 5. Создаем "живое" состояние для данной "ноги"
-            const legOrderSettings: AdaptiveOrderSetting[] = zones.map(z => ({
-                zone: z.zone,
-                orderPrice: z.entryPrice,
-                amount: z.quantity,
-                originalAmount: z.quantity,
-                amountToFill: z.quantity,
-                amountFilledInZone: 0,
-                isProcessed: false,
-                timesEntered: 0,
-            }));
-
-            const newLegState: HedgeLegState = {
-                tradingPair: tradingPair,
-                leverage: leverage,
-                currentHedgeAmount: executedQty,
-                lastAveragePrice: executedQty > 0 ? executionPrice : 0,
-                totalRealizedPnl: 0,
-                totalFeesPaid: initialFee,
-                ordersSettings: legOrderSettings,
-            };
-
-            allLegsState.push(newLegState);
-        }
-        // --- КОНЕЦ ЦИКЛА ПО "НОГАМ" ---
-
-        // 6. Создаем и сохраняем общее состояние позиции
-        const newState: HedgePositionState = {
-            strategyType: planFromFrontend.strategyType,
-            pairName: pairName,
-            totalValue: planFromFrontend.totalValue,
-            isActive: true,
-            history: historyLog,
-            isSimulation: false,
-            legs: allLegsState, 
-        };
-
-        this.activeHedgingPositions.set(positionId, newState);
-        await this.saveHedgeState(positionId, newState);
-
-        this.logger.log(`[${positionId}] Hedging process for ${pairName} initialized successfully.`);
     }
 
     public async validateValue(params: ValidateValueBody): Promise<void> {
@@ -780,89 +458,17 @@ export class BinanceService implements OnModuleInit {
         }
     }
 
-    private async checkHedgeZones(
-        positionId: string,
-        positionState: HedgePositionState,  
-        legState: HedgeLegState,            
-        currentPrice: number
-    ) {
-        if (this.executingPositions.has(positionId)) {
-            return;
-        }
-
-        const logPrefix = `[${positionId}][${legState.tradingPair}]`;
-
-        // --- Логика откупа (Take-Profit / Stop-Loss) ---
-        const lastActiveZone = [...legState.ordersSettings].reverse().find(s => s.isProcessed);
-
-        if (lastActiveZone?.isProcessed) {
-            try {
-                this.executingPositions.add(positionId);
-
-                const lowWaterMark = lastActiveZone.lowWaterMark;
-                const lastAveragePrice = legState.lastAveragePrice; // Используем среднюю цену "ноги"
-
-                if (lowWaterMark !== undefined && lastAveragePrice > lowWaterMark) {
-                    const takeProfitTargetPrice = lowWaterMark + (lastAveragePrice - lowWaterMark) * 0.1;
-                    if (currentPrice >= takeProfitTargetPrice) {
-                        this.logger.warn(`${logPrefix} Take-Profit on rebound. Target: >=${takeProfitTargetPrice.toFixed(4)}. Current: ${currentPrice}.`);
-                        await this.executeHedgeAction(positionId, positionState, legState, 'BUY', lastActiveZone, currentPrice);
-                        return; // Выходим после действия
-                    }
-                }
-
-                if (currentPrice >= lastAveragePrice) {
-                    this.logger.error(`${logPrefix} !!! PARTIAL STOP-LOSS AT ENTRY !!! Target: >=${lastAveragePrice.toFixed(4)}. Current: ${currentPrice}.`);
-                    await this.executeHedgeAction(positionId, positionState, legState, 'BUY', lastActiveZone, currentPrice);
-                    return; // Выходим после действия
-                }
-            } finally {
-                this.executingPositions.delete(positionId);
-            }
-        }
-
-        // --- Логика входа в новые зоны (Продажа) ---
-        try {
-            this.executingPositions.add(positionId);
-            for (const setting of legState.ordersSettings) {
-                const timerKey = `${positionId}-${legState.tradingPair}-${setting.zone}`; // Уникальный ключ
-
-                // Цена вошла в зону продажи
-                if (!setting.isProcessed && setting.orderPrice && currentPrice <= setting.orderPrice) {
-                    if (!this.zoneEntryTimers.has(timerKey)) {
-                        this.logger.log(`${logPrefix} Price entered Zone ${setting.zone}. Starting timer...`);
-                        const timer = setTimeout(() => {
-                            this.logger.warn(`${logPrefix} Timer for Zone ${setting.zone} finished. Executing SELL.`);
-                            this.executeHedgeAction(positionId, positionState, legState, 'SELL', setting, currentPrice);
-                            this.zoneEntryTimers.delete(timerKey);
-                        }, this.ZONE_ENTRY_COOLDOWN_MS);
-                        this.zoneEntryTimers.set(timerKey, timer);
-                    }
-                } else { // Цена вышла из зоны (поднялась выше)
-                    if (this.zoneEntryTimers.has(timerKey)) {
-                        this.logger.log(`${logPrefix} Price left Zone ${setting.zone}. Cancelling timer.`);
-                        clearTimeout(this.zoneEntryTimers.get(timerKey)!);
-                        this.zoneEntryTimers.delete(timerKey);
-                    }
-                }
-            }
-        } finally {
-            this.executingPositions.delete(positionId);
-        }
-    }
-
     private async deltaNeutralWorkerLoop() {
         const promises: Promise<void>[] = [];
         this.activeHedgingPositions.forEach((positionState, positionId) => {
-            // Запускаем проверку только для активных позиций с типом DELTA_NEUTRAL
-            if (positionState.isActive && positionState.strategyType === 'DELTA_NEUTRAL') {
+            if (!positionState.isActive) return;
+            
+            if (positionState.strategyType === 'DELTA_NEUTRAL') {
                 promises.push(this.checkDeltaNeutralHedge(positionId, positionState));
             }
         });
 
-        // Выполняем все проверки параллельно
         if (promises.length > 0) {
-            this.logger.log(`[Delta-Neutral-Worker] Checking ${promises.length} positions...`);
             await Promise.all(promises);
         }
     }
@@ -990,104 +596,6 @@ export class BinanceService implements OnModuleInit {
         }
     }
 
-    private async executeHedgeAction(
-        positionId: string,
-        positionState: HedgePositionState, // Общее состояние (для истории)
-        legState: HedgeLegState,           // Состояние "ноги" (для расчетов)
-        side: 'BUY' | 'SELL',
-        setting: AdaptiveOrderSetting,
-        triggerPrice: number
-        ) {
-        const isSim = positionState.isSimulation === true;
-        const logPrefix = isSim ? `[SIMULATION][${positionId}][${legState.tradingPair}]` : `[${positionId}][${legState.tradingPair}]`;
-
-        const precision = this.pairPrecisions.get(legState.tradingPair)?.quantityPrecision ?? 3;
-        let quantityToTrade = 0;
-
-        if (side === 'SELL') {
-            // ... (логика расчета объема остается прежней)
-            const originalAmount = setting.originalAmount;
-            const SENSITIVITY_FACTOR = 2.0;
-            let increaseFactor = 1.0;
-            if (setting.orderPrice && legState.lastAveragePrice > 0 && setting.orderPrice < legState.lastAveragePrice) {
-                const priceShift = legState.lastAveragePrice - setting.orderPrice;
-                const priceShiftPercentage = priceShift / legState.lastAveragePrice;
-                increaseFactor = 1 + (priceShiftPercentage * SENSITIVITY_FACTOR);
-            }
-            increaseFactor = Math.min(increaseFactor, 3.0);
-            quantityToTrade = originalAmount * increaseFactor;
-        } else { // BUY
-            quantityToTrade = setting.amountFilledInZone;
-        }
-
-        if (quantityToTrade <= 0) return;
-        const quantityFormatted = quantityToTrade.toFixed(precision);
-
-        try {
-            const orderResponse = await this.placeOrder({
-                symbol: legState.tradingPair,
-                side,
-                type: 'MARKET',
-                quantity: quantityFormatted
-            }, isSim);
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const verifiedOrder = await this.queryOrder(legState.tradingPair, orderResponse.orderId, isSim);
-
-            if (!verifiedOrder || parseFloat(verifiedOrder.executedQty) === 0) {
-                this.logger.error(`${logPrefix} FAILED to verify execution for order ${orderResponse.orderId}. Aborting state update.`);
-                return;
-            }
-
-            const actualExecutionPrice = parseFloat(verifiedOrder.avgPrice);
-            const actualExecutedQty = parseFloat(verifiedOrder.executedQty);
-            this.logger.log(`${logPrefix} Verified Execution: ${side} ${actualExecutedQty} at ${actualExecutionPrice}`);
-
-            const tradeValue = actualExecutionPrice * actualExecutedQty;
-            const commission = tradeValue * this.TAKER_FEE_RATE;
-            legState.totalFeesPaid = (legState.totalFeesPaid || 0) + commission; // Обновляем комиссию "ноги"
-
-            const logMessage = `Leg ${legState.tradingPair}: ${side} ${actualExecutedQty} at ${actualExecutionPrice.toFixed(4)} (Zone ${setting.zone}). Fee: ≈${commission.toFixed(4)}.`;
-            positionState.history.push(`[${new Date().toISOString()}] ${logMessage}`); // Добавляем в общую историю
-
-            if (side === 'SELL') {
-                const oldTotalValue = legState.lastAveragePrice * legState.currentHedgeAmount;
-                const newTotalValue = oldTotalValue + tradeValue;
-                legState.currentHedgeAmount += actualExecutedQty;
-                legState.lastAveragePrice = newTotalValue / legState.currentHedgeAmount;
-                setting.isProcessed = true;
-                setting.amountFilledInZone += actualExecutedQty;
-                setting.lowWaterMark = actualExecutionPrice;
-                this.logger.log(`${logPrefix} SELL success. New leg amount: ${legState.currentHedgeAmount.toFixed(3)}, New leg avg price: ${legState.lastAveragePrice.toFixed(4)}`);
-            } else { // BUY
-                const entryPrice = legState.lastAveragePrice;
-                if (entryPrice > 0) {
-                    const realizedPnlForTrade = (entryPrice - actualExecutionPrice) * actualExecutedQty;
-                    legState.totalRealizedPnl = (legState.totalRealizedPnl || 0) + realizedPnlForTrade;
-                    
-                    const pnlMessage = `Leg ${legState.tradingPair}: Realized PnL: ${realizedPnlForTrade.toFixed(4)}. Total leg PnL: ${legState.totalRealizedPnl.toFixed(4)}.`;
-                    positionState.history.push(`[${new Date().toISOString()}] ${pnlMessage}`);
-                    this.logger.log(`${logPrefix} ${pnlMessage}`);
-                }
-                legState.currentHedgeAmount -= actualExecutedQty;
-                setting.amountFilledInZone -= actualExecutedQty;
-
-                if (setting.amountFilledInZone <= (setting.originalAmount * 0.01)) {
-                    setting.isProcessed = false;
-                    setting.amountFilledInZone = 0;
-                    setting.timesEntered += 1;
-                    setting.lowWaterMark = undefined;
-                    setting.amountToFill = setting.originalAmount;
-                } else {
-                    this.logger.warn(`${logPrefix} PARTIAL BUY FILL for Zone ${setting.zone}. Remaining to close: ${setting.amountFilledInZone.toFixed(precision)}. Zone remains active.`);
-                }
-            }
-            await this.saveHedgeState(positionId, positionState);
-        } catch (error) {
-            this.logger.error(`${logPrefix} FAILED to place or verify ${side} order for zone ${setting.zone}:`, error.response?.data || error.message);
-        }
-    }
-
     async stopHedgingForPosition(positionId: string) {
         this.logger.log(`Received request to stop hedging for position: ${positionId}`);
         const positionState = this.activeHedgingPositions.get(positionId);
@@ -1193,15 +701,14 @@ export class BinanceService implements OnModuleInit {
             }
         }
 
-        if (positionState.strategyType === 'GRID' && positionState.tradingPair) {
-            return this.getLegacyHedgePositionStatus(positionId, positionState);
+        // Remove grid-specific checks
+        if (positionState.strategyType !== 'DELTA_NEUTRAL') {
+            throw new BadRequestException('Only delta-neutral strategy is supported');
         }
 
         let aggregatedUnrealizedPnl = 0;
         let aggregatedRealizedPnl = 0;
         let aggregatedFees = 0;
-        
-        // ИСПРАВЛЕНИЕ: Явно типизируем массив
         const legsDetails: any[] = []; 
 
         for (const leg of positionState.legs) {
@@ -1303,26 +810,6 @@ export class BinanceService implements OnModuleInit {
             this.logger.error(`Failed to execute getLegacyHedgePositionStatus for ${positionId}:`, error);
             throw new HttpException(`Failed to fetch real-time position data from Binance`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-    
-    public async recalculateHedgeZones(plan: HedgePlan): Promise<HedgePlan> {
-        this.logger.log(`Recalculating hedge zones for plan on pair: ${plan.pairName}`);
-        if (!plan || !plan.pairName || !plan.totalValue || !plan.legs || plan.legs.length === 0) {
-            throw new BadRequestException('Invalid plan data provided for recalculation.');
-        }
-        const params: CalculationParams = {
-            strategyType: plan.strategyType as 'GRID' | 'DUAL_GRID',
-            totalValue: plan.totalValue.toString(),
-            pairName: plan.pairName,
-            legs: plan.legs.map(leg => ({
-                binanceSymbol: leg.tradingPair,
-                range: {
-                    lower: leg.range.lower.toString(),
-                    upper: leg.range.upper.toString()
-                }
-            }))
-        };
-        return this.calculateHedgePlan(params);
     }
 
     public async getAccountBalance(): Promise<{ availableBalance: string }> {

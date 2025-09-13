@@ -14,28 +14,6 @@ import { RemapHedgeBody } from './interfaces/remap-hedge-body.interface';
 export class BinanceController {
   constructor(private readonly binanceService: BinanceService) {}
 
-  @Post('hedging/calculate-plan')
-  calculateHedgePlan(@Body() body: CalculationParams) {
-    if (!body.strategyType || !body.totalValue || !body.legs || body.legs.length === 0) {
-      throw new BadRequestException('strategyType, totalValue, and at least one leg are required.');
-    }
-    return this.binanceService.calculateHedgePlan(body);
-  }
-
-  @Post('hedging/start')
-  startHedging(@Body() body: StartHedgingBody) {
-    if (!body.positionId || !body.pairName || !body.totalValue || !body.range || !body.hedgePlan) {
-      throw new BadRequestException('positionId, pairName, totalValue, range, and hedgePlan are required.');
-    }
-    return this.binanceService.startHedgingProcess(
-      body.positionId,
-      body.pairName,
-      body.totalValue,
-      body.range,
-      body.hedgePlan
-    );
-  }
-
   @Post('hedging/stop')
   async stopHedging(@Body() body: StopHedgingBody) {
     if (!body.positionId) {
@@ -50,12 +28,6 @@ export class BinanceController {
       throw new BadRequestException('positionId is required');
     }
     return this.binanceService.getHedgePositionStatus(positionId);
-  }
-
-  @Post('hedging/recalculate-plan')
-  @HttpCode(HttpStatus.OK)
-  recalculatePlan(@Body() plan: HedgePlan) {
-    return this.binanceService.recalculateHedgeZones(plan);
   }
 
   @Get('tradable-symbols')
@@ -78,12 +50,10 @@ export class BinanceController {
   }
 
   @Post('hedging/start-simulation')
-  startHedgingSimulation(@Body() body: StartHedgingBody) {
-    if (!body.positionId || !body.hedgePlan) {
-      throw new BadRequestException('positionId and hedgePlan are required for simulation.');
+    startHedgingSimulation(@Body() body: StartHedgingBody) {
+        // Replace with unsupported error
+        throw new BadRequestException('Grid simulation is no longer supported. Please use delta-neutral simulation.');
     }
-    return this.binanceService.startHedgingSimulation(body.positionId, body.hedgePlan);
-  }
 
   @Post('hedging/start-delta-neutral')
   startDeltaNeutralHedging(@Body() body: StartDeltaNeutralHedgingBody) {

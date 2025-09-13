@@ -6,14 +6,14 @@ export interface SetupPositionBody {
   quoteMint: string;
   priceRange: any;
   hedgePlan: any;
-  exchange: 'binance' | 'bybit';
+  exchange: 'binance'; 
   strategyType?: 'GRID' | 'DELTA_NEUTRAL';
 }
 
 export interface HedgePreviewBody {
   strategyType: 'GRID' | 'DUAL_GRID';
   pairName: string; 
-  exchange: 'binance' | 'bybit';
+  exchange: 'binance'; 
   legs: {
       binancePairSymbol: string;
       baseMint: string;
@@ -27,13 +27,8 @@ export interface RecalculatePlanBody {
     plan: any;
 }
 
-export interface AutomatedRangeBody {
-  poolId: string;
-  initialLpValueUsd: number;
-}
-
 export interface ValidateValueBody {
   totalValue: number;
-  exchange: 'binance' | 'bybit';
+  exchange: 'binance'; 
   legs: { tradingPair: string }[];
 }

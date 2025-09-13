@@ -38,8 +38,6 @@ export class LiquidityBotService {
     private readonly CLMM_PROGRAM_ID = new PublicKey('CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK');
     private readonly birdeyeApiKey: string;
     private readonly moralisApiKey: string;
-    private readonly analyticsServiceHost: string;
-    private readonly scannerHost: string;
 
     constructor(
         positionRepository: Repository<Position>,
@@ -60,8 +58,6 @@ export class LiquidityBotService {
         this.coinMarketCapApiKey = coinMarketCapApiKey;
         this.birdeyeApiKey = birdeyeApiKey;
         this.moralisApiKey = moralisApiKey;
-        this.scannerHost = scannerHost;
-        this.analyticsServiceHost = process.env.ANALYTICS_SERVICE_HOST || 'http://127.0.0.1:8000';
 
         this.cluster = 'mainnet';
         const rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=ec7871b0-d394-4763-a453-02b32dfe92f8';
@@ -1049,14 +1045,14 @@ async stopBinance() {
     }
   }
 
-  async getFuturesAccountBalance(exchange: 'binance' | 'bybit') {
+  async getFuturesAccountBalance(): Promise<any> {
     try {
-        const futuresHost = process.env.FUTURES_HOST;
-        const response = await axios.get(`http://${futuresHost}/${exchange}/account/balance`);
+        const futuresHost = process.env.BINANCE_FUTURES_HOST;
+        const response = await axios.get(`http://${futuresHost}/binance/account/balance`);
         return response.data;
     } catch (error: any) {
-        console.error(`Failed to get balance from ${exchange}-service: ${error.message}`);
-        throw new Error(`Could not retrieve ${exchange} balance.`);
+        console.error(`Failed to get balance from binance-service: ${error.message}`);
+        throw new Error('Could not retrieve Binance balance.');
     }
   }
 
@@ -1334,53 +1330,6 @@ async stopBinance() {
     }
   }
 
-  async getAutomatedRange(poolId: string, initialLpValueUsd: number) {
-    console.log(`Proxying automated range request to analytics service for pool ${poolId}`);
-    const targetUrl = `${this.analyticsServiceHost}/api/v3/hedge-breakeven-range`;
-    try {
-        const response = await axios.get(targetUrl, {
-            params: {
-                pool_id: poolId,
-                initial_lp_value_usd: initialLpValueUsd,
-                hedge_ratio: 0.2,
-                time_to_edge_days: 7,
-            },
-            timeout: 15000, 
-        });
-        
-        console.log(`Successfully received automated range from analytics service for pool ${poolId}`);
-        return response.data;
-
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            const errorMsg = error.response?.data?.detail || error.message;
-            const statusCode = error.response?.status || 500;
-            console.error(`Error from analytics service: [${statusCode}] ${errorMsg}`);
-            throw new Error(errorMsg);
-        }
-        
-        console.error('An unknown error occurred while calling the analytics service', error);
-        throw new Error('Failed to communicate with the range analytics service.');
-    }
-  }
-
-  async getHighAprPools(): Promise<any> {
-    console.log(`Proxying request to scanner service at ${this.scannerHost}`);
-    try {
-      const response = await axios.get(`${this.scannerHost}/api/high-apr-pools`, {
-        timeout: 5000, 
-      });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(`Failed to connect to scanner service: ${error.message}`);
-        return [];
-      }
-      console.error('An unknown error occurred while proxying to scanner.', error);
-      throw new Error('Could not retrieve data from the scanner service.');
-    }
-  }
-
   async startHedgeSimulationForExisting(params: any): Promise<any> {
     console.log(`[SIMULATION] Starting hedge simulation for existing position: ${params.positionId}`);
     try {
@@ -1406,45 +1355,34 @@ async stopBinance() {
   }
 
   private async getFuturesServiceConfig(positionId: string): Promise<{ futuresHost: string; exchangePrefix: string }> {
-    const position = await this.positionRepository.findOne({ where: { positionId } });
-    const exchange = position?.hedgeExchange || 'binance'; 
-    const hostEnvVariable = exchange === 'bybit' ? 'BYBIT_FUTURES_HOST' : 'BINANCE_FUTURES_HOST';
-    const futuresHost = process.env[hostEnvVariable as 'BYBIT_FUTURES_HOST' | 'BINANCE_FUTURES_HOST'];
+    const futuresHost = process.env.BINANCE_FUTURES_HOST;
     if (!futuresHost) {
-        throw new Error(`Host for ${exchange} (${hostEnvVariable}) is not configured in .env`);
+        throw new Error('BINANCE_FUTURES_HOST is not configured in .env');
     }
     return {
         futuresHost,
-        exchangePrefix: exchange,
+        exchangePrefix: 'binance',
     };
   }
 
   async validateDeltaNeutralValue(params: DeltaNeutralValidationBody): Promise<{ isValid: boolean; message: string }> {
-    console.log(`[Validation] Received request for ${params.exchange} with value ${params.totalValue}`);
+    console.log(`[Validation] Received request for value ${params.totalValue}`);
     try {
-      const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfigForExchange(params.exchange);
-      await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/validate-value`, {
-        totalValue: params.totalValue,
-        legs: params.legs,
-      });
-      return { isValid: true, message: 'OK' };
+        const futuresHost = process.env.BINANCE_FUTURES_HOST;
+        if (!futuresHost) {
+            throw new Error('BINANCE_FUTURES_HOST is not configured in .env');
+        }
+        
+        await axios.post(`http://${futuresHost}/binance/hedging/validate-value`, {
+            totalValue: params.totalValue,
+            legs: params.legs,
+        });
+        return { isValid: true, message: 'OK' };
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.data) {
-        return { isValid: false, message: error.response.data.message };
-      }
-      return { isValid: false, message: 'Could not connect to the hedging service for validation.' };
+        if (axios.isAxiosError(error) && error.response?.data) {
+            return { isValid: false, message: error.response.data.message };
+        }
+        return { isValid: false, message: 'Could not connect to the hedging service for validation.' };
     }
-  }
-
-  private async getFuturesServiceConfigForExchange(exchange: 'binance' | 'bybit'): Promise<{ futuresHost: string; exchangePrefix: string }> {
-    const hostEnvVariable = exchange === 'bybit' ? 'BYBIT_FUTURES_HOST' : 'BINANCE_FUTURES_HOST';
-    const futuresHost = process.env[hostEnvVariable];
-    if (!futuresHost) {
-        throw new Error(`Host for ${exchange} (${hostEnvVariable}) is not configured in .env`);
-    }
-    return {
-        futuresHost,
-        exchangePrefix: exchange,
-    };
   }
 }
