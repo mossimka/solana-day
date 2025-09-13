@@ -5,6 +5,7 @@ import {
   PositionsList,
   ChartPanel,
 } from "@/components/platform-new";
+import Net from "@/components/ui/Net/Net";
 import React from "react";
 
 export default function PlatformPage() {
@@ -79,7 +80,8 @@ export default function PlatformPage() {
 
   return (
     <main className="px-4 md:px-8 py-28 space-y-10 max-w-7xl mx-auto">
-      <section className="grid lg:grid-cols-4 gap-8">
+      <Net />
+      <section className="grid lg:grid-cols-4 gap-8 z-20">
         <div className="lg:col-span-3 space-y-8">
           <div className="space-y-4">
             <h2 className="text-sm font-semibold tracking-wide">Chart</h2>

@@ -23,6 +23,32 @@ services:
       - db
     command: npm run start
 
+  binancebot:
+    build:
+      context: ./binancebot
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8001:8001"
+    env_file:
+      - ./binancebot/.env
+    depends_on:
+      - backend
+    command: npm run start:dev
+
+  rebalancer:
+    build:
+      context: ./raydium-clmm-bot
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8002:8002"
+    env_file:
+      - ./raydium-clmm-bot/.env
+    depends_on:
+      - db
+      - backend
+      - binancebot
+    command: npm run start
+
   db:
     image: postgres:15
     restart: always
