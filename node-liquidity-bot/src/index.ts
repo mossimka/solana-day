@@ -18,11 +18,11 @@ async function bootstrap() {
     }
 
     const app = express();
-    const PORT = process.env.PORT || 3000;
-    const PORT_FRONTEND = process.env.PORT_FRONTEND || 8000;
+    const PORT = process.env.PORT || 8000; 
+    const URL_FRONTEND = process.env.URL_FRONTEND || `http://localhost:3000`;
 
     app.use(cors({
-        origin: `http://localhost:${PORT_FRONTEND}`,
+        origin: URL_FRONTEND,
         credentials: true
     }));
     app.use(express.json());
