@@ -1,0 +1,154 @@
+[
+  {
+    "poolId": "4crhN3D8R5rnZd66q9b32P7K649e5XdzCfPMPiTzBceH",
+    "baseMint": "APT",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "APTUSDT"
+  },
+  {
+    "poolId": "HopVRTvFvRe1ED3dRCQrt1h5onkMvY3tKUHRVQMc7MMH",
+    "baseMint": "AXS",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "AXSUSDT"
+  },
+  {
+    "poolId": "6kbC5epG18DF2DwPEW34tBy5pGFS7pEGALR3v5MGxgc5",
+    "baseMint": "BTC",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "BTCUSDT"
+  },
+  {
+    "poolId": "3FRFbRMvUjjufZBAjbdGcb1PYYyH9MJAyRQ7WuHuXTXe",
+    "baseMint": "CHEEMS",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "1000CHEEMSUSDT"
+  },
+  {
+    "poolId": "CbGQojcizFEHn3woL7NPu3P9BLL1SWz5a8zkL9gks24q",
+    "baseMint": "DYDX",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "DYDXUSDT"
+  },
+  {
+    "poolId": "AoPebtuJC4f2RweZSxcVCcdeTgaEXY64Uho8b5HdPxAR",
+    "baseMint": "ETH",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "ETHUSDT"
+  },
+  {
+    "poolId": "GqDwxaJ75cyignGdu41vwBUHHQUk4KMFtpGaKT3j7cXo",
+    "baseMint": "ETH",
+    "quoteMint": "LINK",
+    "baseCexSymbol": "ETHUSDT",
+    "quoteCexSymbol": "LINKUSDT"
+  },
+  {
+    "poolId": "8MdJ6DmDrk76BtBnDBESx7smt1Xe7zCa2h2xRRRkZtxp",
+    "baseMint": "FIDA",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "FIDAUSDT"
+  },
+  {
+    "poolId": "5DECiJuqwmeCptoBEpyJtXKrVfiUrG9nBbBGkxGkPYyF",
+    "baseMint": "IN",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "INUSDT"
+  },
+  {
+    "poolId": "Hr8i6MAm4W5Lwb2fB2CD44A2t3Ag3gGc1rmd6amrWsWC",
+    "baseMint": "LINK",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "LINKUSDT"
+  },
+  {
+    "poolId": "7Z1c6GHutf3q2MNheyFE8KMNVEALuiPaqoEMyjbCbuku",
+    "baseMint": "MANA",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "MANAUSDT"
+  },
+  {
+    "poolId": "82pU8g2jQDyDfuH5nmCgFANS4vKTv6tPXe4WBDHRRyWh",
+    "baseMint": "ME",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "MEUSDT"
+  },
+  {
+    "poolId": "C5yXRTp39qv5WZrfiqoqeyK6wvbqS97oBqbsDUqfZyu",
+    "baseMint": "ORCA",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "ORCAUSDT"
+  },
+  {
+    "poolId": "6RQWxdbef3oDdh66s5aEn8M7Gp4iGzcocnuY2L1YKS7o",
+    "baseMint": "PENGU",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "PENGUUSDT"
+  },
+  {
+    "poolId": "53myh4AdRFkvdQjXs32WpdoPWYE22WFXpvfD4WiNRyQo",
+    "baseMint": "PENGU",
+    "quoteMint": "ME",
+    "baseCexSymbol": "PENGUUSDT",
+    "quoteCexSymbol": "MEUSDT"
+  },
+  {
+    "poolId": "GfvqUB36CPfqZDz5ntQ2YsoKRwg1MCewmurhc7jw3P5s",
+    "baseMint": "PEOPLE",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "PEOPLEUSDT"
+  },
+  {
+    "poolId": "4NKgCxkoNmUHtfgqiCquMaY3phBDwg4MCgpGu4UmFgbx",
+    "baseMint": "PONKE",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "PONKEUSDT"
+  },
+  {
+    "poolId": "3cmPpX8kKzEra2umtLCDxMfjma82ELtAMaSYVmdaNLxi",
+    "baseMint": "SAND",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "SANDUSDT"
+  },
+  {
+    "poolId": "SU7vPveBjEuR5tgQwidRqqTxn1WwraHpydHHBpM2W96",
+    "baseMint": "SHIB",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "1000SHIBUSDT"
+  },
+  {
+    "poolId": "5dHEPTgvscKkAc54R77xUeGdgShdG9Mf6gJ9bwBqyb3V",
+    "baseMint": "SUSHI",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "SUSHIUSDT"
+  },
+  {
+    "poolId": "9SWy6nbSVZ44XuixEvHpona663pZPpVgzXQ3N7muG4ou",
+    "baseMint": "SUSHI",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "SUSHIUSDT"
+  },
+  {
+    "poolId": "HpgV2jnzgrGfrZjeZGkHgTnEgRFAhtzCVuk3BRFTFJwk",
+    "baseMint": "TRX",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "TRXUSDT"
+  },
+  {
+    "poolId": "8J5fa8WBGaDSv8AUpgtqdh9HM5AZuSf2ijvSkKoaCXCi",
+    "baseMint": "UNI",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "UNIUSDT"
+  },
+  {
+    "poolId": "zHGN3Kh1miQSuehUWD1TPYTxkCkUrtT8foNxtASsiKJ",
+    "baseMint": "WLFI",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "WLFIUSDT"
+  },
+  {
+    "poolId": "83xxjVczDseaCzd7D61BRo7LcP7cMXut5n7thhB4rL4d",
+    "baseMint": "YFI",
+    "quoteMint": "USDC",
+    "binancePairSymbol": "YFIUSDT"
+  }
+]
