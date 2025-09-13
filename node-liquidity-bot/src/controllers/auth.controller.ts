@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
+import * as jwt from 'jsonwebtoken';
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -67,9 +68,8 @@ export class AuthController {
       if (refreshToken) {
         try {
           // Decode refresh token to get user ID and invalidate it
-          const jwt = require('jsonwebtoken');
           const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
-          const decoded = jwt.verify(refreshToken, refreshSecret) as any;
+          const decoded = jwt.verify(refreshToken, refreshSecret!) as any;
           
           if (decoded.userId) {
             await this.authService.logout(decoded.userId);

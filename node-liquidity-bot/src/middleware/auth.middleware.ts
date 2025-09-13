@@ -7,7 +7,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Try to get token from cookie first, then fallback to Authorization header
-    let token = req.cookies.accessToken;
+    let token = req.cookies?.accessToken;
     
     // Fallback to Authorization header for compatibility
     if (!token) {

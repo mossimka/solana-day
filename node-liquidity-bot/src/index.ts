@@ -8,6 +8,15 @@ import cors from 'cors';
 import { AppDataSource } from './config/data-source';
 import mainRouter from './routes';
 
+// Extend Express Request interface to include cookies
+declare global {
+    namespace Express {
+        interface Request {
+            cookies: { [key: string]: string };
+        }
+    }
+}
+
 async function bootstrap() {
     try {
         await AppDataSource.initialize();
@@ -33,6 +42,22 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization']
     }));
     app.use(express.json());
+
+    // Simple cookie parser middleware
+    app.use((req, res, next) => {
+        req.cookies = {};
+        const cookieHeader = req.headers.cookie;
+        if (cookieHeader) {
+            cookieHeader.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                if (parts.length === 2) {
+                    const [name, value] = parts;
+                    req.cookies[name] = decodeURIComponent(value);
+                }
+            });
+        }
+        next();
+    });
 
     app.use('/api', mainRouter);
 
