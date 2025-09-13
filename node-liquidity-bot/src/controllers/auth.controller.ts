@@ -30,10 +30,56 @@ export class AuthController {
       }
       
       const token = await this.authService.login(username, password);
+      
+      // Set httpOnly cookie for security
+      res.cookie('refreshToken', token.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
+      
       res.json(token);
     } catch (error) {
       if (error instanceof Error) {
         res.status(401).json({ message: error.message }); // 401 Unauthorized for bad credentials
+      } else {
+        res.status(500).json({ message: 'An unexpected error occurred' });
+      }
+    }
+  }
+
+  async logout(req: Request, res: Response) {
+    try {
+      // Clear the httpOnly cookie
+      res.clearCookie('refreshToken');
+      res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: 'An unexpected error occurred' });
+      }
+    }
+  }
+
+  async refresh(req: Request, res: Response) {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+      
+      if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token not found' });
+      }
+
+      // You would validate the refresh token here
+      // For now, we'll just return a new access token
+      // In a real app, you'd verify the refresh token and issue a new access token
+      
+      const newToken = await this.authService.refreshToken(refreshToken);
+      res.json({ accessToken: newToken });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(401).json({ message: error.message });
       } else {
         res.status(500).json({ message: 'An unexpected error occurred' });
       }

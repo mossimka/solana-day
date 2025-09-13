@@ -46,4 +46,34 @@ export class AuthService {
 
     return { accessToken };
   }
+
+  async refreshToken(refreshToken: string): Promise<string> {
+    // In a real implementation, you would:
+    // 1. Verify the refresh token
+    // 2. Check if it's not expired
+    // 3. Generate a new access token
+    
+    // For now, we'll do a simple validation
+    if (!refreshToken) {
+      throw new Error('Invalid refresh token');
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('Server configuration error: JWT_SECRET is not set.');
+    }
+
+    try {
+      // Verify the refresh token
+      const decoded = jwt.verify(refreshToken, jwtSecret) as any;
+      
+      // Generate new access token
+      const payload = { userId: decoded.userId, username: decoded.username };
+      const newAccessToken = jwt.sign(payload, jwtSecret, { expiresIn: '1d' });
+      
+      return newAccessToken;
+    } catch (error) {
+      throw new Error('Invalid or expired refresh token');
+    }
+  }
 }

@@ -15,10 +15,10 @@ const Header = () => {
           </li>
           <li className="flex items-center list-none ">
             <Link
-              href="/platform/trading"
+              href="/platform"
               className="text-[var(--color-text-primary)]  text-base font-medium no-underline transition-all duration-300 ease-in-out px-4 py-2 rounded-md flex items-center gap-2 hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-hover)]"
             >
-              <span>Trading</span>
+              <span className="cursor-pointer">Trading</span>
               <ChartAreaIcon
                 size={20}
                 className="text-[var(--color-primary)]"
@@ -30,7 +30,7 @@ const Header = () => {
               href="/platform/settings"
               className="text-[var(--color-text-primary)]  text-base font-medium no-underline transition-all duration-300 ease-in-out px-4 py-2 rounded-md flex items-center gap-2 hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-hover)]"
             >
-              <span>Settings</span>
+              <span className="cursor-pointer">Settings</span>
               <SettingsIcon size={20} className="text-[var(--color-primary)]" />
             </Link>
           </li>
