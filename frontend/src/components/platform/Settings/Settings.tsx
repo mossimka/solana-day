@@ -1,115 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Net from "@/components/ui/Net/Net";
+import { useBinanceApi } from "@/hooks/useBinanceApi";
 import { 
   Key, 
-  Wallet, 
-  Eye, 
-  EyeOff, 
-  Copy, 
   Trash2, 
   Plus, 
-  Edit, 
   Shield,
   Settings as SettingsIcon,
-  ExternalLink
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react";
 
-interface ApiKey {
-  id: string;
-  name: string;
-  key: string;
-  service: string;
-  createdAt: string;
-  lastUsed: string;
-  status: 'active' | 'inactive';
-}
-
-interface WalletConnection {
-  id: string;
-  name: string;
-  address: string;
-  type: 'Phantom' | 'Solflare' | 'Ledger' | 'Custom';
-  balance: number;
-  isConnected: boolean;
-}
-
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<'apis' | 'wallets' | 'security'>('apis');
-  const [showApiKey, setShowApiKey] = useState<{[key: string]: boolean}>({});
+  const [activeTab, setActiveTab] = useState<'apis' | 'security'>('apis');
+  const [showAddApiForm, setShowAddApiForm] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  
+  const { 
+    isLoading, 
+    hasApiKeys, 
+    error, 
+    saveBinanceKeys, 
+    deleteBinanceKeys, 
+    checkApiKeysStatus, 
+    clearError 
+  } = useBinanceApi();
 
-  // Dummy API Keys
-  const apiKeys: ApiKey[] = [
-    {
-      id: '1',
-      name: 'Raydium API',
-      key: 'sk_live_51H3k2lKjHgF8kL2mN9oP7qR3s4T6u8V0wX2y5Z7a9B1c3D4e6F8g0H2i4',
-      service: 'Raydium',
-      createdAt: '2024-01-15',
-      lastUsed: '2024-01-20',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Jupiter API',
-      key: 'jp_test_4B7d9E2f8G5h1I6j3K8l1M4n7O0p3Q6r9S2t5U8v1W4x7Y0z3A6b9C2d5E8f',
-      service: 'Jupiter',
-      createdAt: '2024-01-10',
-      lastUsed: '2024-01-18',
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Orca API',
-      key: 'orca_api_9Z8y7X6w5V4u3T2s1R0q9P8o7N6m5L4k3J2i1H0g9F8e7D6c5B4a3Z2y1X0w',
-      service: 'Orca',
-      createdAt: '2024-01-05',
-      lastUsed: '2024-01-12',
-      status: 'inactive'
+  // Check API keys status on component mount
+  useEffect(() => {
+    checkApiKeysStatus();
+  }, [checkApiKeysStatus]);
+
+  const handleSaveApiKeys = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!apiKey.trim() || !secretKey.trim()) {
+      return;
     }
-  ];
 
-  // Dummy Wallets
-  const wallets: WalletConnection[] = [
-    {
-      id: '1',
-      name: 'Main Wallet',
-      address: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-      type: 'Phantom',
-      balance: 125.43,
-      isConnected: true
-    },
-    {
-      id: '2',
-      name: 'Trading Wallet',
-      address: 'DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ',
-      type: 'Solflare',
-      balance: 89.76,
-      isConnected: true
-    },
-    {
-      id: '3',
-      name: 'Cold Storage',
-      address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-      type: 'Ledger',
-      balance: 1250.00,
-      isConnected: false
+    try {
+      await saveBinanceKeys({ apiKey: apiKey.trim(), secretKey: secretKey.trim() });
+      setApiKey('');
+      setSecretKey('');
+      setShowAddApiForm(false);
+    } catch (error) {
+      console.error('Failed to save API keys:', error);
     }
-  ];
-
-  const toggleApiKeyVisibility = (id: string) => {
-    setShowApiKey(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
+  const handleDeleteApiKeys = async () => {
+    if (window.confirm('Are you sure you want to delete your Binance API keys?')) {
+      try {
+        await deleteBinanceKeys();
+      } catch (error) {
+        console.error('Failed to delete API keys:', error);
+      }
+    }
   };
 
   const tabs = [
     { id: 'apis', label: 'API Management', icon: Key },
-    { id: 'wallets', label: 'Wallet Connections', icon: Wallet },
     { id: 'security', label: 'Security', icon: Shield }
   ];
 
@@ -136,7 +88,7 @@ export default function Settings() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'apis' | 'wallets' | 'security')}
+                onClick={() => setActiveTab(tab.id as 'apis' | 'security')}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
                   activeTab === tab.id ? 'text-white' : 'hover:opacity-80'
                 }`}
@@ -157,168 +109,169 @@ export default function Settings() {
         <div className="space-y-6">
           {activeTab === 'apis' && (
             <div className="space-y-6">
-              {/* Add API Key Button */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold" style={{color: 'var(--color-text-primary)'}}>API Keys</h2>
-                <button 
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
-                  style={{background: 'var(--gradient-primary)', color: 'white'}}
+              {/* Error Display */}
+              {error && (
+                <div 
+                  className="glass p-4 border border-red-500/20 rounded-lg flex items-center gap-3"
+                  style={{backgroundColor: 'rgba(239, 68, 68, 0.1)'}}
                 >
-                  <Plus size={18} />
-                  Add API Key
-                </button>
-              </div>
+                  <AlertCircle size={20} className="text-red-500" />
+                  <p className="text-red-400">{error}</p>
+                  <button 
+                    onClick={clearError}
+                    className="ml-auto text-red-400 hover:text-red-300"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
 
-              {/* API Keys List */}
+              {/* Binance API Section */}
               <div className="space-y-4">
-                {apiKeys.map((api) => (
-                  <div key={api.id} className="glass p-6">
-                    <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold" style={{color: 'var(--color-text-primary)'}}>
+                    Binance API Configuration
+                  </h2>
+                  {hasApiKeys ? (
+                    <button 
+                      onClick={handleDeleteApiKeys}
+                      disabled={isLoading}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 disabled:opacity-50"
+                      style={{backgroundColor: 'var(--color-error)', color: 'white'}}
+                    >
+                      <Trash2 size={18} />
+                      Delete API Keys
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setShowAddApiForm(!showAddApiForm)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
+                      style={{background: 'var(--gradient-primary)', color: 'white'}}
+                    >
+                      <Plus size={18} />
+                      Add API Keys
+                    </button>
+                  )}
+                </div>
+
+                {hasApiKeys ? (
+                  /* API Keys Configured */
+                  <div className="glass p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <CheckCircle2 size={24} className="text-green-500" />
                       <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>{api.name}</h3>
-                          <span 
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              api.status === 'active' ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'
-                            }`}
-                          >
-                            {api.status}
-                          </span>
-                        </div>
+                        <h3 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>
+                          Binance API Keys Configured
+                        </h3>
                         <p className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
-                          Service: <span style={{color: 'var(--color-primary)'}}>{api.service}</span>
+                          Your Binance API keys are securely stored and ready to use.
                         </p>
-                        <p className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
-                          Created: {api.createdAt} • Last used: {api.lastUsed}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          className="p-2 rounded-lg hover:opacity-80"
-                          style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                        >
-                          <Edit size={16} style={{color: 'var(--color-text-secondary)'}} />
-                        </button>
-                        <button 
-                          className="p-2 rounded-lg hover:opacity-80"
-                          style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                        >
-                          <Trash2 size={16} style={{color: 'var(--color-error)'}} />
-                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="flex-1 px-3 py-2 rounded-lg font-mono text-sm"
-                        style={{backgroundColor: 'var(--color-bg-secondary)'}}
+                    <div className="flex items-center gap-2 mt-4">
+                      <span 
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-green-600 text-white"
                       >
-                        <span style={{color: 'var(--color-text-primary)'}}>
-                          {showApiKey[api.id] ? api.key : '•'.repeat(50)}
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => toggleApiKeyVisibility(api.id)}
-                        className="p-2 rounded-lg hover:opacity-80"
-                        style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                      >
-                        {showApiKey[api.id] ? 
-                          <EyeOff size={16} style={{color: 'var(--color-text-secondary)'}} /> : 
-                          <Eye size={16} style={{color: 'var(--color-text-secondary)'}} />
-                        }
-                      </button>
-                      <button 
-                        onClick={() => copyToClipboard(api.key)}
-                        className="p-2 rounded-lg hover:opacity-80"
-                        style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                      >
-                        <Copy size={16} style={{color: 'var(--color-text-secondary)'}} />
-                      </button>
+                        Active
+                      </span>
+                      <span className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
+                        Service: <span style={{color: 'var(--color-primary)'}}>Binance</span>
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'wallets' && (
-            <div className="space-y-6">
-              {/* Add Wallet Button */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold" style={{color: 'var(--color-text-primary)'}}>Connected Wallets</h2>
-                <button 
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
-                  style={{background: 'var(--gradient-primary)', color: 'white'}}
-                >
-                  <Plus size={18} />
-                  Connect Wallet
-                </button>
-              </div>
-
-              {/* Wallets List */}
-              <div className="space-y-4">
-                {wallets.map((wallet) => (
-                  <div key={wallet.id} className="glass p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>{wallet.name}</h3>
-                          <span 
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              wallet.isConnected ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'
-                            }`}
-                          >
-                            {wallet.isConnected ? 'Connected' : 'Disconnected'}
-                          </span>
-                        </div>
-                        <p className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
-                          Type: <span style={{color: 'var(--color-primary)'}}>{wallet.type}</span>
-                        </p>
-                        <p className="text-sm" style={{color: 'var(--color-text-secondary)'}}>
-                          Balance: <span style={{color: 'var(--color-success)'}}>{wallet.balance} SOL</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          className="p-2 rounded-lg hover:opacity-80"
-                          style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                        >
-                          <Edit size={16} style={{color: 'var(--color-text-secondary)'}} />
-                        </button>
-                        <button 
-                          className="p-2 rounded-lg hover:opacity-80"
-                          style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                        >
-                          <ExternalLink size={16} style={{color: 'var(--color-text-secondary)'}} />
-                        </button>
-                        <button 
-                          className="p-2 rounded-lg hover:opacity-80"
-                          style={{backgroundColor: 'var(--color-bg-secondary)'}}
-                        >
-                          <Trash2 size={16} style={{color: 'var(--color-error)'}} />
-                        </button>
-                      </div>
+                ) : showAddApiForm ? (
+                  /* Add API Form */
+                  <form onSubmit={handleSaveApiKeys} className="glass p-6 space-y-4">
+                    <h3 className="text-lg font-semibold" style={{color: 'var(--color-text-primary)'}}>
+                      Add Binance API Keys
+                    </h3>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
+                        API Key
+                      </label>
+                      <input
+                        type="text"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Enter your Binance API key"
+                        className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:border-2"
+                        style={{
+                          backgroundColor: 'var(--color-bg-secondary)',
+                          color: 'var(--color-text-primary)',
+                          border: '1px solid var(--color-border)'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                        required
+                      />
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="flex-1 px-3 py-2 rounded-lg font-mono text-sm"
-                        style={{backgroundColor: 'var(--color-bg-secondary)'}}
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{color: 'var(--color-text-secondary)'}}>
+                        Secret Key
+                      </label>
+                      <input
+                        type="password"
+                        value={secretKey}
+                        onChange={(e) => setSecretKey(e.target.value)}
+                        placeholder="Enter your Binance secret key"
+                        className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:border-2"
+                        style={{
+                          backgroundColor: 'var(--color-bg-secondary)',
+                          color: 'var(--color-text-primary)',
+                          border: '1px solid var(--color-border)'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                        required
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="submit"
+                        disabled={isLoading || !apiKey.trim() || !secretKey.trim()}
+                        className="px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 disabled:opacity-50"
+                        style={{background: 'var(--gradient-primary)', color: 'white'}}
                       >
-                        <span style={{color: 'var(--color-text-primary)'}}>
-                          {wallet.address}
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => copyToClipboard(wallet.address)}
-                        className="p-2 rounded-lg hover:opacity-80"
-                        style={{backgroundColor: 'var(--color-bg-secondary)'}}
+                        {isLoading ? 'Saving...' : 'Save API Keys'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddApiForm(false);
+                          setApiKey('');
+                          setSecretKey('');
+                        }}
+                        className="px-4 py-2 rounded-lg font-medium transition-all hover:opacity-80"
+                        style={{
+                          backgroundColor: 'var(--color-bg-secondary)',
+                          color: 'var(--color-text-primary)',
+                          border: '1px solid var(--color-border)'
+                        }}
                       >
-                        <Copy size={16} style={{color: 'var(--color-text-secondary)'}} />
+                        Cancel
                       </button>
                     </div>
+                  </form>
+                ) : (
+                  /* No API Keys State */
+                  <div className="glass p-6 text-center">
+                    <Key size={48} className="mx-auto mb-4" style={{color: 'var(--color-text-secondary)'}} />
+                    <h3 className="text-lg font-semibold mb-2" style={{color: 'var(--color-text-primary)'}}>
+                      No API Keys Configured
+                    </h3>
+                    <p className="text-sm mb-4" style={{color: 'var(--color-text-secondary)'}}>
+                      Add your Binance API keys to enable trading and hedging functionality.
+                    </p>
+                    <button 
+                      onClick={() => setShowAddApiForm(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 mx-auto"
+                      style={{background: 'var(--gradient-primary)', color: 'white'}}
+                    >
+                      <Plus size={18} />
+                      Add API Keys
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}

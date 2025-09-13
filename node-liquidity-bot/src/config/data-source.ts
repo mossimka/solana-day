@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import { Position } from '../entities/position.entity';
 import { SessionWallet } from '../entities/session-wallet.entity';
 import { User } from '../entities/user.entity';
+import { BinanceKeys } from '../entities/binance-keys.entity';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_DATABASE,
     synchronize: true, 
     logging: false,
-    entities: [Position, SessionWallet, User],
+    entities: [Position, SessionWallet, User, BinanceKeys],
     migrations: [],
     subscribers: [],
 });

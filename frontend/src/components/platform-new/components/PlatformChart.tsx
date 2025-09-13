@@ -8,9 +8,10 @@ import type { ChartDataPoint, ChartTimeFrame } from '../types';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface ChartPanelProps {
-  poolId: string;
+  poolId?: string;
   symbol?: string;
   className?: string;
+  isWalletConnected?: boolean;
 }
 
 interface CandlestickData {
@@ -26,7 +27,8 @@ interface VolumeData {
 export const ChartPanel: React.FC<ChartPanelProps> = ({ 
   poolId,
   symbol = 'SOL/USDC',
-  className = ''
+  className = '',
+  isWalletConnected = false
 }) => {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<ChartTimeFrame>('1H');
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
@@ -148,7 +150,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
           reset: true,
         },
       },
-      foreColor: '#a0a0a0',
+      foreColor: '#94a3b8',
     },
     title: {
       text: symbol,
@@ -163,15 +165,15 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
       type: 'datetime' as const,
       axisBorder: {
         show: true,
-        color: '#333',
+        color: '#374151',
       },
       axisTicks: {
         show: true,
-        color: '#333',
+        color: '#374151',
       },
       labels: {
         style: {
-          colors: '#a0a0a0',
+          colors: '#94a3b8',
         },
       },
     },
@@ -181,20 +183,20 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
       },
       labels: {
         style: {
-          colors: '#a0a0a0',
+          colors: '#94a3b8',
         },
         formatter: (value: number) => `$${value.toFixed(2)}`,
       },
     },
     grid: {
-      borderColor: '#333',
+      borderColor: '#374151',
       strokeDashArray: 3,
     },
     plotOptions: {
       candlestick: {
         colors: {
-          upward: '#00b746',
-          downward: '#ef403c',
+          upward: '#14f195',
+          downward: '#ff4757',
         },
         wick: {
           useFillColor: true,
@@ -211,18 +213,18 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
         const c = w.globals.seriesCandleC[seriesIndex][dataPointIndex];
         
         return `
-          <div style="padding: 12px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
+          <div style="padding: 12px; background: #1a1a1a; border-radius: 8px; border: 1px solid #374151;">
             <div style="font-weight: bold; margin-bottom: 8px; color: #ffffff;">${symbol}</div>
-            <div style="color: #a0a0a0; font-size: 12px; margin-bottom: 4px;">
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">
               <span>O:</span> <span style="color: #ffffff;">$${o?.toFixed(2)}</span>
             </div>
-            <div style="color: #a0a0a0; font-size: 12px; margin-bottom: 4px;">
-              <span>H:</span> <span style="color: #00b746;">$${h?.toFixed(2)}</span>
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">
+              <span>H:</span> <span style="color: #14f195;">$${h?.toFixed(2)}</span>
             </div>
-            <div style="color: #a0a0a0; font-size: 12px; margin-bottom: 4px;">
-              <span>L:</span> <span style="color: #ef403c;">$${l?.toFixed(2)}</span>
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">
+              <span>L:</span> <span style="color: #ff4757;">$${l?.toFixed(2)}</span>
             </div>
-            <div style="color: #a0a0a0; font-size: 12px;">
+            <div style="color: #94a3b8; font-size: 12px;">
               <span>C:</span> <span style="color: #ffffff;">$${c?.toFixed(2)}</span>
             </div>
           </div>
@@ -240,7 +242,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
       height: 120,
       background: 'transparent',
       toolbar: { show: false },
-      foreColor: '#a0a0a0',
+      foreColor: '#94a3b8',
     },
     plotOptions: {
       bar: {
@@ -248,7 +250,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
           ranges: [{
             from: 0,
             to: Number.MAX_VALUE,
-            color: '#4a5568'
+            color: '#9945ff'
           }]
         }
       }
@@ -262,7 +264,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
     },
     yaxis: {
       labels: {
-        style: { colors: '#a0a0a0' },
+        style: { colors: '#94a3b8' },
         formatter: (value: number) => {
           if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
           if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
@@ -271,7 +273,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
       },
     },
     grid: {
-      borderColor: '#333',
+      borderColor: '#374151',
       strokeDashArray: 3,
     },
     tooltip: {
@@ -284,18 +286,165 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
 
   const timeFrames: ChartTimeFrame[] = ['15M', '1H', '4H', '1D'];
 
+  // Generate hardcoded Sephira coin data when wallet is not connected
+  const generateSephiraData = (): ChartDataPoint[] => {
+    const now = Date.now();
+    const interval = 60 * 60 * 1000; // 1 hour intervals
+    const dataPoints = 24; // 24 hours of data
+    const mockData: ChartDataPoint[] = [];
+    
+    // Sephira coin starts at $1.50 and has an upward trend to $2.20
+    const basePrice = 1.50;
+    const targetPrice = 2.20;
+    const priceIncrement = (targetPrice - basePrice) / dataPoints;
+
+    for (let i = 0; i < dataPoints; i++) {
+      const timestamp = Math.floor((now - (dataPoints - i) * interval) / 1000);
+      const trendPrice = basePrice + i * priceIncrement;
+      const volatility = 0.08; // 8% volatility
+      
+      const open = trendPrice + (Math.random() - 0.5) * volatility;
+      const high = open + Math.random() * volatility * 0.8;
+      const low = open - Math.random() * volatility * 0.8;
+      const close = trendPrice + (Math.random() - 0.4) * volatility + priceIncrement * 0.7;
+
+      mockData.push({
+        time: timestamp,
+        open: Number(open.toFixed(4)),
+        high: Number(Math.max(open, high, close).toFixed(4)),
+        low: Number(Math.min(open, low, close).toFixed(4)),
+        close: Number(close.toFixed(4)),
+        volume: Math.floor(25000 + Math.random() * 75000), // 25K-100K volume
+      });
+    }
+
+    return mockData;
+  };
+
+  // Show Sephira demo chart when wallet is not connected OR no pool selected
+  if (!isWalletConnected || !poolId) {
+    const sephiraData = generateSephiraData();
+    const sephiraChartData = {
+      candlestick: sephiraData.map(point => ({
+        x: point.time * 1000,
+        y: [point.open, point.high, point.low, point.close],
+      })),
+      volume: sephiraData.map(point => ({
+        x: point.time * 1000,
+        y: point.volume,
+      })),
+    };
+
+    return (
+      <div className={`glass rounded-lg p-6 w-[50vw] mw-[50vw] ${className}`}>
+        {/* Header with timeframe buttons */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <h3 className="text-lg font-semibold text-white">SEPH/USDC</h3>
+            <span className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded-full text-xs font-medium">
+              DEMO
+            </span>
+          </div>
+          <div className="flex space-x-2">
+            {timeFrames.map((timeframe) => (
+              <button
+                key={timeframe}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  timeframe === '1H'
+                    ? 'glass text-white'
+                    : 'bg-gray-700 text-gray-300'
+                }`}
+                style={{
+                  backgroundColor: timeframe === '1H' ? 'var(--color-primary)' : undefined,
+                  color: timeframe === '1H' ? 'var(--color-text-primary)' : undefined
+                }}
+              >
+                {timeframe}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Demo banner */}
+        <div className="mb-4 p-3 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-600/30 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-purple-300"></span>
+            <span className="text-purple-200 text-sm font-medium">
+              {!isWalletConnected 
+                ? 'Demo Chart - Connect wallet to trade real assets'
+                : 'Demo Chart - Select a token pair to view real data'
+              }
+            </span>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="space-y-4">
+          <Chart
+            options={chartOptions}
+            series={[{
+              name: 'SEPH/USDC',
+              data: sephiraChartData.candlestick,
+            }]}
+            type="candlestick"
+            height={400}
+          />
+          
+          {/* Volume Chart */}
+          <Chart
+            options={volumeChartOptions}
+            series={[{
+              name: 'Volume',
+              data: sephiraChartData.volume,
+            }]}
+            type="bar"
+            height={120}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className={`bg-gray-900 rounded-lg p-6 ${className}`}>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-gray-400">Loading chart data...</div>
+      <div className={`glass rounded-lg p-6 w-[50vw] min-w-[50vw] ${className}`}>
+        {/* Header with timeframe buttons */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">{symbol}</h3>
+          <div className="flex space-x-2">
+            {timeFrames.map((timeframe) => (
+              <button
+                key={timeframe}
+                disabled
+                className="px-3 py-1 text-sm rounded transition-colors bg-gray-700 text-gray-500 cursor-not-allowed"
+              >
+                {timeframe}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading state with same height as chart */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-center h-[400px] bg-gray-800/30 rounded-lg border border-gray-700/50">
+            <div className="text-center space-y-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-400 border-t-transparent mx-auto"></div>
+              <div className="text-gray-400">Loading chart data...</div>
+            </div>
+          </div>
+          <div className="flex items-center justify-center h-[120px] bg-gray-800/30 rounded-lg border border-gray-700/50">
+            <div className="text-center">
+              <div className="animate-pulse h-2 w-24 bg-gray-600 rounded mx-auto mb-2"></div>
+              <div className="text-gray-500 text-sm">Volume</div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-gray-900 rounded-lg p-6 ${className}`}>
+    <div className={`glass rounded-lg p-6 w-[50vw] ${className}`}>
       {/* Header with timeframe buttons */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">{symbol}</h3>
@@ -306,9 +455,13 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({
               onClick={() => setSelectedTimeFrame(timeframe)}
               className={`px-3 py-1 text-sm rounded transition-colors ${
                 selectedTimeFrame === timeframe
-                  ? 'bg-blue-600 text-white'
+                  ? 'glass text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
+              style={{
+                backgroundColor: selectedTimeFrame === timeframe ? 'var(--color-primary)' : undefined,
+                color: selectedTimeFrame === timeframe ? 'var(--color-text-primary)' : undefined
+              }}
             >
               {timeframe}
             </button>
