@@ -64,4 +64,8 @@ export const liquidityApi = {
       "/liquidity/validate-delta-neutral",
       { totalValue, exchange, legs }
     ),
+  getChartData: (poolId: string, resolution: string, from: number, to: number) =>
+    axiosInstance.get("/liquidity/chart-data", {
+      params: { poolId, resolution, from, to },
+    }),
 };

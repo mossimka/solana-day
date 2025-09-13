@@ -3,6 +3,7 @@ import {
   useLiquidityPlatform,
   ControlPanel,
   PositionsList,
+  ChartPanel,
 } from "@/components/platform-new";
 import React from "react";
 
@@ -80,6 +81,19 @@ export default function PlatformPage() {
     <main className="px-4 md:px-8 py-28 space-y-10 max-w-7xl mx-auto">
       <section className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold tracking-wide">Chart</h2>
+            {selectedPool ? (
+              <ChartPanel 
+                poolId={selectedPool.poolId} 
+                symbol={`${selectedPool.baseMint}/${selectedPool.quoteMint}`}
+              />
+            ) : (
+              <div className="text-xs px-3 py-2 rounded-lg bg-[var(--color-surface-hover)] border border-[var(--color-border)]/80">
+                Select a token pair to view the chart
+              </div>
+            )}
+          </div>
           <div className="space-y-4">
             <h2 className="text-sm font-semibold tracking-wide">Positions</h2>
             {message && (

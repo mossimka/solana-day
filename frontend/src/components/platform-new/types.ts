@@ -166,3 +166,14 @@ export interface HedgePreviewPayload {
     priceRangePercent: number;
   }[];
 }
+
+export interface ChartDataPoint {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export type ChartTimeFrame = '15M' | '1H' | '4H' | '1D';
