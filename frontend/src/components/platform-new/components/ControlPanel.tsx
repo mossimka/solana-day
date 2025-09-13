@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import type { FullHedgePlan } from "../types";
+import type { FullHedgePlan, BalanceResponse, Exchange, StrategyType, Pool } from "../types";
 import { WalletPanel } from "./WalletPanel";
 import { SetupLiquidityPanel } from "./SetupLiquidityPanel";
 import { PairSelectorModal } from "./PairSelectorModal";
 
 interface ControlPanelProps {
   activeWallet: string | null;
-  balances: any;
+  balances: BalanceResponse;
   binanceBalance: string;
   bybitBalance: string;
   selectedExchange: string;
@@ -22,8 +22,8 @@ interface ControlPanelProps {
   hedgePlan: FullHedgePlan | null;
   loadingPreview: boolean;
   strategyType: string;
-  setStrategyType: (s: any) => void;
-  setSelectedExchange: (e: any) => void;
+  setStrategyType: (s: StrategyType) => void;
+  setSelectedExchange: (e: Exchange) => void;
   onHedgePlanChange: (
     legIndex: number,
     field: string,
@@ -43,7 +43,7 @@ interface ControlPanelProps {
   deltaNeutralWarning?: string;
   // Pair selection
   onOpenPairModal: () => void;
-  onSelectPair: (p: any) => void;
+  onSelectPair: (p: Pool) => void;
   pairModalOpen: boolean;
   onClosePairModal: () => void;
 }

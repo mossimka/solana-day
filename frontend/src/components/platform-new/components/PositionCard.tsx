@@ -186,7 +186,6 @@ export const PositionCard: React.FC<PositionCardProps> = ({
         <HedgePlanDialog
           plan={hedgePlan}
           currentZone={details?.legs?.[0]?.currentZone}
-          currentPrice={details?.legs?.[0]?.currentPrice}
           currentHedgeSize={details?.legs?.[0]?.hedgePositionSize}
           onClose={() => setOpenPlan(false)}
         />

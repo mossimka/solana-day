@@ -5,7 +5,6 @@ import type { FullHedgePlan } from "../types";
 interface HedgePlanDialogProps {
   plan: FullHedgePlan;
   currentZone?: number;
-  currentPrice?: number;
   currentHedgeSize?: number;
   onClose: () => void;
 }
@@ -13,7 +12,6 @@ interface HedgePlanDialogProps {
 export const HedgePlanDialog: React.FC<HedgePlanDialogProps> = ({
   plan,
   currentZone = 0,
-  currentPrice = 0,
   currentHedgeSize = 0,
   onClose,
 }) => {

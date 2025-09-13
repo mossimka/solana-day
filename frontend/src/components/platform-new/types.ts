@@ -128,7 +128,7 @@ export interface FuturesBalanceResponse {
 export type Exchange = "binance" | "bybit";
 
 // UI Helper Types
-export interface HedgePlanUpdatePayload extends FullHedgePlan {}
+export type HedgePlanUpdatePayload = FullHedgePlan;
 
 export interface SetupPayload {
   poolId: string;
@@ -146,4 +146,23 @@ export interface AutomatedRangeResponse {
 export interface DeltaNeutralValidationResponse {
   isValid: boolean;
   message?: string;
+}
+
+export interface ValidationLeg {
+  tradingPair: string;
+}
+
+export interface HedgePreviewPayload {
+  poolId?: string;
+  inputAmount?: number;
+  priceRangePercent?: number;
+  strategyType?: StrategyType;
+  exchange?: Exchange;
+  pairName?: string;
+  legs?: {
+    binancePairSymbol?: string;
+    baseMint: string;
+    inputAmount: number;
+    priceRangePercent: number;
+  }[];
 }

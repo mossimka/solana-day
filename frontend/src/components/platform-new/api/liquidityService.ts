@@ -9,6 +9,8 @@ import type {
   SetupPayload,
   DeltaNeutralValidationResponse,
   Exchange,
+  HedgePreviewPayload,
+  ValidationLeg,
 } from "../types";
 
 // Centralized API layer for liquidity platform interactions
@@ -30,7 +32,7 @@ export const liquidityApi = {
     axiosInstance.get<Record<string, number>>("/liquidity/token/price", {
       params: { symbols: symbols.join(",") },
     }),
-  getHedgePreview: (payload: any) =>
+  getHedgePreview: (payload: HedgePreviewPayload) =>
     axiosInstance.post<FullHedgePlan>("/liquidity/hedge-preview", payload),
   recalcPlan: (plan: HedgePlanUpdatePayload) =>
     axiosInstance.post<FullHedgePlan>("/liquidity/recalculate-plan", plan),
@@ -57,7 +59,7 @@ export const liquidityApi = {
       poolId,
       initialLpValueUsd,
     }),
-  validateDeltaNeutral: (totalValue: number, exchange: Exchange, legs: any[]) =>
+  validateDeltaNeutral: (totalValue: number, exchange: Exchange, legs: ValidationLeg[]) =>
     axiosInstance.post<DeltaNeutralValidationResponse>(
       "/liquidity/validate-delta-neutral",
       { totalValue, exchange, legs }

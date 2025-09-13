@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useUser } from '@/hooks/useUser';
 
 const SignOutButton = () => {
   const [isLoading, setIsLoading] = useState(false);

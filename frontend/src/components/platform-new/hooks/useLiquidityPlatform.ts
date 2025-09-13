@@ -50,7 +50,7 @@ export function useLiquidityPlatform({
     try {
       const { data } = await liquidityApi.getPositionsWithDetails();
       setPositions(data || []);
-    } catch (e) {
+    } catch {
       setMessage("Failed to fetch positions");
     } finally {
       setLoadingPositions(false);
@@ -117,11 +117,11 @@ export function useLiquidityPlatform({
   }, []);
 
   // ---------- Hedge preview logic ----------
-  const buildHedgePreviewPayload = () => {
+  const buildHedgePreviewPayload = useCallback(() => {
     if (!selectedPool) return null;
     const isDual = !["USDC", "USDT", "USDH"].includes(selectedPool.quoteMint);
     return {
-      strategyType: isDual ? "DUAL_GRID" : "GRID",
+      strategyType: (isDual ? "DUAL_GRID" : "GRID") as StrategyType,
       pairName: `${selectedPool.baseMint}/${selectedPool.quoteMint}`,
       exchange: selectedExchange,
       legs: isDual
@@ -150,7 +150,7 @@ export function useLiquidityPlatform({
             },
           ],
     };
-  };
+  }, [selectedPool, inputAmount, priceRangePercent, selectedExchange]);
 
   const fetchHedgePreview = useCallback(async () => {
     if (!selectedPool || !inputAmount || strategyType !== "GRID") {
@@ -171,9 +171,8 @@ export function useLiquidityPlatform({
   }, [
     selectedPool,
     inputAmount,
-    priceRangePercent,
     strategyType,
-    selectedExchange,
+    buildHedgePreviewPayload,
   ]);
 
   const recalcPlan = useCallback(async (plan: FullHedgePlan) => {
@@ -317,7 +316,8 @@ export function useLiquidityPlatform({
       }
       await fetchPositions();
       if (selectedPool) await fetchPoolBalances(selectedPool.poolId);
-    } catch (e: any) {
+    } catch (error: unknown) {
+      const e = error as { message?: string };
       setMessage(e?.message || "Failed to setup position");
     } finally {
       setIsSettingUp(false);
@@ -383,7 +383,7 @@ export function useLiquidityPlatform({
       return;
     const t = setTimeout(() => recalcPlan(hedgePlan), 750);
     return () => clearTimeout(t);
-  }, [hedgePlan?.legs, recalcPlan]);
+  }, [hedgePlan, recalcPlan]);
 
   // Delta-neutral validation effect
   useEffect(() => {
@@ -433,7 +433,8 @@ export function useLiquidityPlatform({
         setDeltaNeutralWarning(
           data.isValid ? "" : data.message || "Value not valid"
         );
-      } catch (e: any) {
+      } catch (error: unknown) {
+        const e = error as { message?: string };
         if (!cancelled)
           setDeltaNeutralWarning(e?.message || "Validation failed");
       }

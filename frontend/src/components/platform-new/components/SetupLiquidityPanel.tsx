@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import type { FullHedgePlan, HedgeLegPlan } from "../types";
+import type { FullHedgePlan, HedgeLegPlan, StrategyType, Exchange } from "../types";
 import { HedgeLegEditor } from "./HedgeLegEditor";
 
 interface SetupLiquidityPanelProps {
@@ -13,9 +13,9 @@ interface SetupLiquidityPanelProps {
   hedgePlan: FullHedgePlan | null;
   loadingPreview: boolean;
   strategyType: string;
-  setStrategyType: (s: any) => void;
+  setStrategyType: (s: StrategyType) => void;
   selectedExchange: string;
-  setSelectedExchange: (e: any) => void;
+  setSelectedExchange: (e: Exchange) => void;
   onHedgePlanChange: (
     legIndex: number,
     field: string,
