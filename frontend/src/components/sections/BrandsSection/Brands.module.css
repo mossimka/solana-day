@@ -4,12 +4,14 @@
   gap: 2rem;
   animation: slideLeftRight 10s ease-in-out infinite;
   white-space: nowrap;
+  padding: 2rem;
 }
 
 .brandLogos img {
   height: 50px;
   width: auto;
   object-fit: contain;
+  filter: var(--filter);
 }
 
 .brandLogos img:nth-child(1),
