@@ -177,7 +177,7 @@ export default function ChartSection({ pairSymbol }: Props) {
   const timeFrames: TimeFrame[] = ["15m", "1H", "4H", "1D", "1W"];
 
   return (
-    <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
+    <div className="glass p-6">
       <div className="flex space-x-2 mb-6">
         {timeFrames.map((tf) => (
           <button
@@ -185,9 +185,13 @@ export default function ChartSection({ pairSymbol }: Props) {
             onClick={() => setSelectedTimeFrame(tf)}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               selectedTimeFrame === tf
-                ? "bg-purple-600 text-white shadow-lg"
-                : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                ? "text-white shadow-lg"
+                : "hover:opacity-80"
             }`}
+            style={{
+              backgroundColor: selectedTimeFrame === tf ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+              color: selectedTimeFrame === tf ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'
+            }}
           >
             {tf}
           </button>

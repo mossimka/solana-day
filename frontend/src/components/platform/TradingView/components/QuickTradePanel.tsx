@@ -23,10 +23,10 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
   };
 
   return (
-    <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
-      <h2 className="text-xl font-bold text-white mb-6">Quick Trade</h2>
+    <div className="glass p-6">
+      <h2 className="text-xl font-bold mb-6" style={{color: 'var(--color-text-primary)'}}>Quick Trade</h2>
 
-      <div className="flex rounded-lg bg-gray-700/50 p-1 mb-6">
+      <div className="flex rounded-lg p-1 mb-6" style={{backgroundColor: 'var(--color-bg-secondary)'}}>
         {(["Buy", "Sell"] as const).map((side) => (
           <button
             key={side}
@@ -36,8 +36,11 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
                 ? side === "Buy"
                   ? "bg-green-600 text-white"
                   : "bg-red-600 text-white"
-                : "text-gray-300 hover:text-white"
+                : "hover:opacity-80"
             }`}
+            style={{
+              color: orderSide === side ? '#ffffff' : 'var(--color-text-secondary)'
+            }}
           >
             {side}
           </button>
@@ -45,11 +48,16 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-400 text-sm mb-2">Order Type</label>
+        <label className="block text-sm mb-2" style={{color: 'var(--color-text-secondary)'}}>Order Type</label>
         <select
           value={orderType}
           onChange={(e) => setOrderType(e.target.value as "Market" | "Limit" | "Stop")}
-          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-400"
+          className="w-full rounded-lg px-3 py-2 focus:outline-none"
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)'
+          }}
         >
           <option value="Market">Market</option>
           <option value="Limit">Limit</option>
@@ -58,30 +66,40 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-400 text-sm mb-2">Amount (SOL)</label>
+        <label className="block text-sm mb-2" style={{color: 'var(--color-text-secondary)'}}>Amount (SOL)</label>
         <input
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.00"
-          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-400"
+          className="w-full rounded-lg px-3 py-2 focus:outline-none"
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)'
+          }}
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-400 text-sm mb-2">Price (USDC)</label>
+        <label className="block text-sm mb-2" style={{color: 'var(--color-text-secondary)'}}>Price (USDC)</label>
         <input
           type={orderType === "Market" ? "text" : "number"}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder={orderType === "Market" ? "Market" : "0.00"}
           disabled={orderType === "Market"}
-          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-400 disabled:opacity-50"
+          className="w-full rounded-lg px-3 py-2 focus:outline-none disabled:opacity-50"
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)'
+          }}
         />
       </div>
 
       <div className="mb-6">
-        <label className="block text-gray-400 text-sm mb-2">
+        <label className="block text-sm mb-2" style={{color: 'var(--color-text-secondary)'}}>
           Slippage Tolerance: {slippageTolerance}%
         </label>
         <input
@@ -107,11 +125,11 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
       </button>
 
       {amount && (
-        <div className="mt-4 p-3 bg-gray-700/30 rounded-lg text-sm">
-          <div className="text-gray-400 mb-2">Order Preview:</div>
+        <div className="mt-4 p-3 rounded-lg text-sm" style={{backgroundColor: 'var(--color-bg-secondary)', opacity: 0.7}}>
+          <div className="mb-2" style={{color: 'var(--color-text-secondary)'}}>Order Preview:</div>
           <div className="flex justify-between">
             <span>Estimated Total:</span>
-            <span className="text-white">
+            <span style={{color: 'var(--color-text-primary)'}}>
               {orderType === "Market"
                 ? `$${(Number(amount) * pairData.currentPrice).toFixed(2)}`
                 : `$${(Number(amount) * Number(price || 0)).toFixed(2)}`}
@@ -119,7 +137,7 @@ export default function QuickTradePanel({ pairData }: { pairData: PairData }) {
           </div>
           <div className="flex justify-between">
             <span>Estimated Fee:</span>
-            <span className="text-white">$2.50</span>
+            <span style={{color: 'var(--color-text-primary)'}}>$2.50</span>
           </div>
         </div>
       )}

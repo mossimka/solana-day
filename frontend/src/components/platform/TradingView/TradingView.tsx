@@ -7,6 +7,7 @@ import PositionsSection from "./components/PositionSection";
 import QuickTradePanel from "./components/QuickTradePanel";
 import PortfolioSummary from "./components/PortfolioSummary";
 import WalletInfo from "./components/WalletInfo";
+import Net from "@/components/ui/Net/Net";
 
 // Shared types (can be extracted into types.ts if you prefer)
 export type TimeFrame = "15m" | "1H" | "4H" | "1D" | "1W";
@@ -92,8 +93,9 @@ export default function TradingView() {
   ];
 
   return (
-    <main className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 pt-40">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <main className="min-h-screen flex items-center justify-center relative pt-40" style={{background: 'var(--color-bg-primary)'}}>
+      <Net />
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 relative" style={{zIndex: 10}}>
         <div className="lg:col-span-3 space-y-6">
           {/* Pair header (pure presentation) */}
           <PairHeader pairData={pairData} />

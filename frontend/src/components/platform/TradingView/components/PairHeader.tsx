@@ -13,14 +13,14 @@ interface PairData {
 
 export default function PairHeader({ pairData }: { pairData: PairData }) {
   return (
-    <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
+    <div className="glass p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold mb-2" style={{color: 'var(--color-text-primary)'}}>
             {pairData.symbol}
           </h1>
           <div className="flex items-center space-x-6">
-            <div className="text-3xl font-bold text-white">
+            <div className="text-3xl font-bold" style={{color: 'var(--color-text-primary)'}}>
               ${pairData.currentPrice.toFixed(2)}
             </div>
             <div
@@ -40,16 +40,16 @@ export default function PairHeader({ pairData }: { pairData: PairData }) {
           </div>
         </div>
         <div className="text-right space-y-1 text-sm">
-          <div className="text-gray-400">
+          <div style={{color: 'var(--color-text-secondary)'}}>
             24h High:{" "}
             <span className="text-green-400">${pairData.high24h}</span>
           </div>
-          <div className="text-gray-400">
+          <div style={{color: 'var(--color-text-secondary)'}}>
             24h Low: <span className="text-red-400">${pairData.low24h}</span>
           </div>
-          <div className="text-gray-400">
+          <div style={{color: 'var(--color-text-secondary)'}}>
             Volume:{" "}
-            <span className="text-purple-400">
+            <span style={{color: 'var(--color-primary)'}}>
               {pairData.volume.toLocaleString()} SOL
             </span>
           </div>

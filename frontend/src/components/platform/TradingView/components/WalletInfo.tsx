@@ -7,26 +7,26 @@ interface WalletInfo {
 
 export default function WalletInfo({ walletInfo }: { walletInfo: WalletInfo }) {
   return (
-    <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 p-6">
+    <div className="glass p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white">Wallet</h2>
-        <Wallet className="text-purple-400" size={24} />
+        <h2 className="text-xl font-bold" style={{color: 'var(--color-text-primary)'}}>Wallet</h2>
+        <Wallet style={{color: 'var(--color-primary)'}} size={24} />
       </div>
 
       <div className="space-y-3">
         <div>
-          <div className="text-gray-400 text-sm">Active Wallet</div>
-          <div className="text-white font-mono text-sm">
+          <div className="text-sm" style={{color: 'var(--color-text-secondary)'}}>Active Wallet</div>
+          <div className="font-mono text-sm" style={{color: 'var(--color-text-primary)'}}>
             {walletInfo.address}
           </div>
         </div>
 
         <div className="flex space-x-2">
-          <button className="flex-1 bg-purple-600/20 text-purple-400 py-2 rounded-lg font-medium hover:bg-purple-600/30 transition-colors">
+          <button className="flex-1 py-2 rounded-lg font-medium hover:opacity-80 transition-colors" style={{backgroundColor: 'var(--color-primary)', color: 'var(--color-text-primary)', opacity: 0.2}}>
             Switch Wallet
           </button>
-          <button className="p-2 bg-gray-700/50 text-gray-400 rounded-lg hover:bg-gray-600/50 transition-colors">
-            <Settings size={16} />
+          <button className="p-2 rounded-lg hover:opacity-80 transition-colors" style={{backgroundColor: 'var(--color-bg-secondary)'}}>
+            <Settings size={16} style={{color: 'var(--color-text-secondary)'}} />
           </button>
         </div>
       </div>
