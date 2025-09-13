@@ -19,11 +19,18 @@ async function bootstrap() {
 
     const app = express();
     const PORT = process.env.PORT || 8000; 
-    const URL_FRONTEND = process.env.URL_FRONTEND || `http://localhost:3000`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || `http://localhost:3000`;
 
+    // Configure CORS for production
     app.use(cors({
-        origin: URL_FRONTEND,
-        credentials: true
+        origin: [
+            FRONTEND_URL,
+            'https://sephyra.top',
+            'http://localhost:3000'  // Keep for local development
+        ],
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
     }));
     app.use(express.json());
 
