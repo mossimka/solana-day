@@ -1,6 +1,36 @@
 .brandLogos {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
+  align-items: center;
+  gap: 2rem;
+  animation: slideLeftRight 10s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.brandLogos img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brandLogos img:nth-child(1),
+.brandLogos img:nth-child(4),
+.brandLogos img:nth-child(5),
+.brandLogos img:nth-child(7),
+.brandLogos img:nth-child(8) {
+  height: 120px;
+  width: auto;
+  object-fit: contain;
+}
+
+
+@keyframes slideLeftRight {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-650px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
