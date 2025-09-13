@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { Position } from '../entities/position.entity';
 import { SessionWallet } from '../entities/session-wallet.entity';
+import { User } from '../entities/user.entity';
 
 dotenv.config();
 
@@ -13,9 +14,9 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    synchronize: false, 
+    synchronize: true, 
     logging: false,
-    entities: [Position, SessionWallet],
+    entities: [Position, SessionWallet, User],
     migrations: [],
     subscribers: [],
 });

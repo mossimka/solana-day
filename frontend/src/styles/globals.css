@@ -3,19 +3,19 @@
 
 @font-face {
   font-family: "DMSans";
-  src: url('/fonts/DMSans-Regular.ttf') format('truetype');
+  src: url("/fonts/DMSans-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
   font-family: "DMSans-Italic";
-  src: url('/fonts/DMSans-Italic.ttf') format('truetype');
+  src: url("/fonts/DMSans-Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
 }
 
-:root { 
+:root {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -46,9 +46,10 @@ body {
 button,
 a {
   font-family: var(--font-main);
+  cursor: pointer;
 }
 
-header {
+/* header {
   position: fixed;
   top: 0;
   left: 0;
@@ -58,7 +59,7 @@ header {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-}
+} */
 
 main {
   flex: 1;
@@ -90,7 +91,7 @@ section {
   position: relative;
 }
 
-nav {
+/* nav {
   width: 80vw;
   padding: 1rem 2rem;
   display: flex;
@@ -104,7 +105,7 @@ ul {
   align-items: center;
   justify-content: space-between;
   list-style: none;
-}
+} */
 
 .mobile-header {
   display: none;
@@ -143,7 +144,7 @@ ul {
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-backdrop-blur));
-  border: 1px solid var(--color-border);  
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
 }
 
@@ -165,21 +166,30 @@ ul {
 
 /* Custom cursor utility classes */
 .cursor-default {
-  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), auto !important;
+  cursor: url("/cursor/cursor.png"), url("/cursor/cursor.cur"), auto !important;
 }
 
 .cursor-pointer {
-  cursor: url('/cursor/pointer.png'), url('/cursor/cursor.cur'), pointer !important;
+  cursor: url("/cursor/pointer.png"), url("/cursor/cursor.cur"), pointer !important;
 }
 
 /* Text elements use default cursor */
-p, span, div, h1, h2, h3, h4, h5, h6 {
-  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), auto;
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  cursor: url("/cursor/cursor.png"), url("/cursor/cursor.cur"), auto;
 }
 
 /* Input fields use default cursor */
-input, textarea {
-  cursor: url('/cursor/cursor.png'), url('/cursor/cursor.cur'), text;
+input,
+textarea {
+  cursor: url("/cursor/cursor.png"), url("/cursor/cursor.cur"), text;
 }
 
 .animate-spin {
@@ -224,7 +234,6 @@ input, textarea {
     transform: rotate(360deg);
   }
 }
-
 
 .button {
   @apply bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg;

@@ -24,10 +24,6 @@ import { Position } from '../entities/position.entity';
 import { SessionWallet } from '../entities/session-wallet.entity';
 import { CryptoService } from './crypto.service';
 
-const anchorDataBuf = {
-    decreaseLiquidity: Buffer.from([0x24, 0x9d, 0x92, 0x1c, 0xec, 0x17, 0x50, 0x73]),
-};
-
 export class LiquidityBotService {
     private positionRepository: Repository<Position>;
     private sessionWalletRepository: Repository<SessionWallet>;
@@ -71,12 +67,13 @@ export class LiquidityBotService {
         const rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=ec7871b0-d394-4763-a453-02b32dfe92f8';
         this.connection = new Connection(rpcUrl, 'confirmed');
         console.log(`Initialized with RPC: ${rpcUrl}`);
+        this.initializeCronJobs();
     }
 
 
-    onModuleInit() {
-    console.log('LiquidityBotService initialized. Scheduling cron jobs...');
-    this.schedulePoolPopulation();
+    private initializeCronJobs(): void {
+        console.log('LiquidityBotService initialized. Scheduling cron jobs...');
+        this.schedulePoolPopulation();
     }
 
   private schedulePoolPopulation(): void {
@@ -93,7 +90,6 @@ export class LiquidityBotService {
           return;
         }
         if (stderr) {
-          // Записываем stderr как обычный лог, т.к. некоторые инструменты пишут туда информацию о процессе
           console.log(`CRON JOB STDERR: ${stderr}`);
         }
         console.log(`CRON JOB SUCCESS: populate-pools script finished successfully.`);
@@ -117,7 +113,7 @@ export class LiquidityBotService {
     const latestWallet = walletRecords.length > 0 ? walletRecords[0] : null;
 
     if (!latestWallet) {
-      throw new Error('Private key is not set. Please save a private key first.', HttpStatus.UNAUTHORIZED);
+      throw new Error('Private key is not set. Please save a private key first.');
     }
 
     const decryptedSecret = this.cryptoService.decrypt(latestWallet.encrypted_key, latestWallet.iv);
@@ -134,14 +130,14 @@ export class LiquidityBotService {
         this.currentOwnerPk = owner.publicKey; 
         console.log(`Raydium SDK initialized for wallet: ${owner.publicKey.toBase58()}`);
     } catch (error) {
-        console.error(`Failed to initialize Raydium SDK: ${error.message}`);
+        console.error(`Failed to initialize Raydium SDK: ${String(error)}`);
         throw error;
     }
   }
 
   async savePrivateKey(privateKey: string): Promise<void> {
     if (!privateKey) {
-        throw new Error('Private key cannot be empty.', HttpStatus.BAD_REQUEST);
+        throw new Error('Private key cannot be empty.');
     }
     const { iv, encryptedData } = this.cryptoService.encrypt(privateKey);
  
@@ -164,7 +160,7 @@ async getPoolInfo(poolId: string) {
   try {
     const rpcData = await this.raydium.clmm.getRpcClmmPoolInfo({ poolId });
     return rpcData;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to fetch pool info for poolId ${poolId}: ${error.message}`);
     throw new Error('Unable to fetch pool info');
   }
@@ -190,7 +186,7 @@ async setupLiquidityPosition(params: any, hedgePlan: any) {
   const endPrice = currentPrice * (1 + percent);
 
   if (currentPrice < startPrice || currentPrice > endPrice) {
-      throw new Error(`Current price (${currentPrice}) is outside the specified range [${startPrice}, ${endPrice}].`, HttpStatus.BAD_REQUEST);
+      throw new Error(`Current price (${currentPrice}) is outside the specified range [${startPrice}, ${endPrice}].`);
   }
 
   const { tick: lowerTick } = TickUtils.getPriceAndTick({ poolInfo, price: new Decimal(startPrice), baseIn: true });
@@ -227,7 +223,7 @@ async setupLiquidityPosition(params: any, hedgePlan: any) {
           openFeeUSD = feeInSol * solPrice;
           console.log(`Transaction fee for opening ${positionId}: ${feeInSol} SOL (${openFeeUSD.toFixed(4)} USD)`);
       }
-  } catch (error) {
+  } catch (error: any) {
       console.error(`Failed to fetch transaction fee for ${txId}: ${error.message}`);
   }
 
@@ -258,26 +254,23 @@ async setupLiquidityPosition(params: any, hedgePlan: any) {
       if (params.strategyType === 'DELTA_NEUTRAL') {
           console.log(`Strategy is DELTA_NEUTRAL. Calling the specialized endpoint on ${exchangePrefix}.`);
           
-          // Для DN не нужен сеточный план, но нужна информация о "ногах" хеджа.
           const payload = {
               positionId: positionId,
               pairName: `${params.baseMint}/${params.quoteMint}`,
               totalValue: initialValue,
               isSimulation: false,
-              legs: hedgePlan?.legs, // Фронтенд должен прислать эту информацию
+              legs: hedgePlan?.legs, 
           };
 
-          // Валидация специфичная для DN
           if (!payload.legs || !Array.isArray(payload.legs) || payload.legs.length === 0) {
               throw new Error('Hedge leg information is required for DELTA_NEUTRAL strategy.');
           }
           
           await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/start-dual-delta-neutral`, payload);
           
-      } else { // GRID / DUAL_GRID
+      } else { 
           console.log(`Using default GRID/DUAL_GRID hedging logic on ${exchangePrefix}.`);
           
-          // ✅ Валидация для сеточных стратегий теперь находится здесь
           if (!hedgePlan || !hedgePlan.strategyType || !hedgePlan.legs || hedgePlan.legs.length === 0) {
               throw new Error('Invalid or missing hedgePlan for GRID strategy. Cannot start hedge.');
           }
@@ -295,13 +288,16 @@ async setupLiquidityPosition(params: any, hedgePlan: any) {
 
       console.log(`Successfully notified futures service to start hedging for ${positionId}.`);
 
-  } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message;
-      console.error(`Failed to notify futures service for position ${positionId}: ${errorMessage}`);
-      // ВАЖНО: На этом этапе позиция на Solana уже создана.
-      // Бросаем ошибку клиенту, чтобы он знал о частичном сбое.
-      throw new Error(`On-chain position created, but hedge start failed: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
-  }
+    } catch (error) { 
+        let errorMessage = 'An unknown error occurred';
+        if (axios.isAxiosError(error)) {
+            errorMessage = error.response?.data?.message || error.message;
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        console.error(`Failed to notify futures service for position ${positionId}: ${errorMessage}`);
+        throw new Error(`On-chain position created, but hedge start failed: ${errorMessage}`);
+    }
   
   return { status: 'success', mint: positionId, txId: txId };
 }
@@ -312,33 +308,26 @@ async closePosition(nftMint: string) {
     console.log(`Attempting to close position using API-FETCHED pool info for NFT: ${nftMint}`);
 
     const positionNftMint = new PublicKey(nftMint);
-
-    // 1. Получаем данные о позиции, как и раньше
     const allPositions = await this.raydium.clmm.getOwnerPositionInfo({ programId: this.CLMM_PROGRAM_ID });
     const positionData = allPositions.find((p) => p.nftMint.equals(positionNftMint));
     if (!positionData) {
-        throw new Error(`Position ${nftMint} not found.`, HttpStatus.NOT_FOUND);
+        throw new Error(`Position ${nftMint} not found.`);
     }
 
-    // --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Получаем данные о пуле через API Raydium ---
     console.log(`Fetching RICH pool info from Raydium API for pool: ${positionData.poolId.toBase58()}`);
     const apiPoolData = await this.raydium.api.fetchPoolById({ ids: positionData.poolId.toBase58() });
     if (!apiPoolData || apiPoolData.length === 0) {
-        throw new Error(`Could not fetch pool info from Raydium API for pool ${positionData.poolId.toBase58()}`, HttpStatus.NOT_FOUND);
+        throw new Error(`Could not fetch pool info from Raydium API for pool ${positionData.poolId.toBase58()}`);
     }
     const poolInfo = apiPoolData[0] as ApiV3PoolInfoConcentratedItem;
-    // -----------------------------------------------------------------
     
-    // Получаем poolKeys отдельно, они могут понадобиться для closePosition
     const { poolKeys } = await this.raydium.clmm.getPoolInfoFromRpc(positionData.poolId.toBase58());
 
-
-    // --- ЭТАП 1: Вывод ликвидности с правильными данными о пуле ---
     if (!positionData.liquidity.isZero()) {
         console.log('STEP 1: Decreasing liquidity with API-provided poolInfo.');
         try {
             const { execute: executeDecrease } = await this.raydium.clmm.decreaseLiquidity({
-                poolInfo, // <-- Используем полный объект, полученный от API
+                poolInfo,
                 poolKeys,
                 ownerPosition: positionData,
                 ownerInfo: { useSOLBalance: true, closePosition: false },
@@ -358,20 +347,18 @@ async closePosition(nftMint: string) {
         console.log('STEP 1 SKIPPED: Position liquidity is already zero.');
     }
 
-    // --- ЭТАП 2: Закрытие пустого аккаунта ---
     console.log('STEP 2: Closing the empty position account.');
     try {
         const finalPositions = await this.raydium.clmm.getOwnerPositionInfo({ programId: this.CLMM_PROGRAM_ID });
         const positionToClose = finalPositions.find((p) => p.nftMint.equals(positionNftMint));
         if (!positionToClose) {
-            this.logger.warn(`Position ${nftMint} not found after decreasing liquidity, it might be already closed.`);
-            // Если позиция уже закрыта, просто удаляем из нашей БД
+            console.warn(`Position ${nftMint} not found after decreasing liquidity, it might be already closed.`);
             await this.positionRepository.delete({ positionId: nftMint });
             return { txId: 'N/A - already closed', success: true };
         }
 
         const { execute: executeClose } = await this.raydium.clmm.closePosition({
-            poolInfo, // <-- Используем тот же полный объект
+            poolInfo,
             poolKeys,
             ownerPosition: positionToClose,
             txVersion,
@@ -441,7 +428,7 @@ async getBalanceByPool(poolId: string) {
         [symbolA]: { amount: amountA, valueInUSD: amountA * priceA },
         [symbolB]: { amount: amountB, valueInUSD: amountB * priceB },
       };
-  } catch (error) {
+  } catch (error: any) {
       console.error(`Failed to fetch balance for pool ${poolId}: ${error.message}`);
       throw new Error(`Unable to fetch balance: ${error.message}`);
   }
@@ -451,7 +438,6 @@ async getTokenPrices(symbols: string): Promise<{ [symbol: string]: number }> {
   const cachedPrices: { [symbol: string]: number } = {};
   const symbolsToFetch: string[] = [];
 
-  // Проверяем кэш
   symbols.split(',').forEach((symbol) => {
    
       symbolsToFetch.push(symbol);
@@ -474,24 +460,22 @@ async getTokenPrices(symbols: string): Promise<{ [symbol: string]: number }> {
           },
         }
       );
-      // console.log('res:', response)
 
-      // Извлекаем цены для всех символов
       symbolsToFetch.forEach((symbol) => {
         const priceData = response.data?.data?.[symbol]?.[0]?.quote?.USD?.price;
         if (priceData) {
           const price = parseFloat(priceData);
           cachedPrices[symbol] = price;
         } else {
-          this.logger.warn(`Price not found for ${symbol} on CoinMarketCap`);
+          console.warn(`Price not found for ${symbol} on CoinMarketCap`);
           cachedPrices[symbol] = 0;
         }
       });
 
       return cachedPrices;
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.status === 429 && attempt < 3) {
-        this.logger.warn(`Rate limit exceeded for CoinMarketCap, retrying (${attempt}/3)`);
+        console.warn(`Rate limit exceeded for CoinMarketCap, retrying (${attempt}/3)`);
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         continue;
       }
@@ -506,7 +490,6 @@ async getTokenPrices(symbols: string): Promise<{ [symbol: string]: number }> {
 }
 
 async positionInfo(nftMint: string, owner?: Keypair): Promise<{ position: PositionInfo; pool: PoolInfo }> {
-  // Если owner не передан, получаем его. Это делает метод более гибким.
   const currentOwner = owner || await this.getOwnerKeypair();
   await this.initialize(currentOwner);
 
@@ -584,7 +567,6 @@ async fetchAllPositions(): Promise<{ positions: PositionInfo[]; pools: PoolInfo[
   for (const record of positionRecords) {
       try {
           if (record.positionId.startsWith('test-')) {
-              // Логика для тестовых позиций (не меняется)
               const fakePositionInfo: any = {
                   positionId: record.positionId,
                   baseAmount: record.initialBaseAmount,
@@ -601,7 +583,6 @@ async fetchAllPositions(): Promise<{ positions: PositionInfo[]; pools: PoolInfo[
                   pools[record.poolId] = { poolId: record.poolId, baseMint: "SOL", quoteMint: "USDC", currentPrice: record.initialPriceA };
               }
           } else {
-              // Логика для РЕАЛЬНЫХ позиций
               const { position: freshPositionData, pool } = await this.fetchPositionInfo(record.positionId, owner);
               const finalPositionData = {
                   ...freshPositionData,
@@ -613,11 +594,9 @@ async fetchAllPositions(): Promise<{ positions: PositionInfo[]; pools: PoolInfo[
                   pools[pool.poolId] = pool;
               }
           }
-      } catch (error) {
-          // --- ИСПРАВЛЕННАЯ ЛОГИКА ---
+      } catch (error: any) {
           if (error.message === 'Position not found') {
-              this.logger.warn(`Position ${record.positionId} is in DB but not on-chain. Hiding from response (likely rebalancing).`);
-              // Мы просто ничего не делаем, и позиция не попадает в итоговый список.
+              console.warn(`Position ${record.positionId} is in DB but not on-chain. Hiding from response (likely rebalancing).`);
           } else {
               console.error(`Could not process position ${record.positionId}: ${error.message}`);
           }
@@ -781,21 +760,20 @@ async currentOrderSettings() {
   try {
     const response = await axios.get(`http://${process.env.FUTURES_HOST}/order-settings`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to notify futures service: ${error.message}`);
-    // Не прерываем выполнение, так как основная операция уже выполнена
   }
 }
-async setOrderSettings(orderSettings: OrderSetting[], initialAmount: string) {
+
+async setOrderSettings(orderSettings: any[], initialAmount: string) {
   try {
     const response = await axios.post(`http://${process.env.FUTURES_HOST}/order-settings`, {
       orderSettings,
       initialAmount,
     });
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to notify futures service: ${error.message}`);
-    // Не прерываем выполнение, так как основная операция уже выполнена
   }
 }
 
@@ -803,9 +781,8 @@ async startBinance() {
   try {
     const response = await axios.post(`http://${process.env.FUTURES_HOST}/futures/start`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to notify futures service: ${error.message}`);
-    // Не прерываем выполнение, так как основная операция уже выполнена
   }
 }
 
@@ -813,9 +790,8 @@ async stopBinance() {
   try {
     const response = await axios.post(`http://${process.env.FUTURES_HOST}/futures/stop`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to notify futures service: ${error.message}`);
-    // Не прерываем выполнение, так как основная операция уже выполнена
   }
 }
 
@@ -826,12 +802,11 @@ async stopBinance() {
   async setupLiquidityPosition_Test(params: UserParams) {
     console.log(`[TEST MODE] Received setup request for pool ${params.poolId}`);
 
-    if (!params.hedgePlan || !params.hedgePlan.legs || params.hedgePlan.legs.length === 0) { // <-- Добавлена проверка на legs
-        throw new Error('[TEST MODE] Hedge plan is missing or invalid in the request.', HttpStatus.BAD_REQUEST);
+    if (!params.hedgePlan || !params.hedgePlan.legs || params.hedgePlan.legs.length === 0) {
+        throw new Error('[TEST MODE] Hedge plan is missing or invalid in the request.');
     }
     
     const hedgePlan = params.hedgePlan;
-    // ИЗВЛЕКАЕМ ДАННЫЕ ИЗ ПЕРВОЙ "НОГИ"
     const gridLeg = hedgePlan.legs[0]; 
     const positionId = `test-solana-pos-${Date.now()}`;
     
@@ -841,35 +816,32 @@ async stopBinance() {
         hedgeExchange: params.exchange,
         initialBaseAmount: params.inputAmount.toString(),
         initialQuoteAmount: "0",
-        // hedgePlan.currentPrice больше нет, можно использовать середину диапазона
         initialPriceA: (gridLeg.range.upper + gridLeg.range.lower) / 2, 
         initialPriceB: 1,
         initialValue: hedgePlan.totalValue,
-        startPrice: gridLeg.range.lower,  // <-- ИСПРАВЛЕНО
-        endPrice: gridLeg.range.upper,    // <-- ИСПРАВЛЕНО
+        startPrice: gridLeg.range.lower,
+        endPrice: gridLeg.range.upper,
         hedgePlan: hedgePlan,  
     });
     await this.positionRepository.save(position);
     console.log(`[TEST MODE] Saved fake position ${positionId} to DB.`);
 
     try {
-        // Для эндпоинта start-simulation достаточно передать positionId и hedgePlan
         const payload = {
           positionId: positionId,
           hedgePlan: hedgePlan,
         };
         
         console.log(`[TEST MODE] Notifying futures service to START SIMULATION with data:`, payload);
-        // Эндпоинт в binance.controller ожидает только positionId и hedgePlan, так что payload корректен
         const exchangePrefix = params.exchange;
-        const futuresHost = this.configService.get<string>('FUTURES_HOST');
+        const futuresHost = process.env.FUTURES_HOST;
         await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/start-simulation`, payload);
         console.log('[TEST MODE] Successfully notified futures service to start SIMULATION.');
 
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[TEST MODE] Failed to notify futures service: ${error.response?.data?.message || error.message}`);
         await this.positionRepository.delete({ positionId: positionId });
-        throw new Error(`[TEST MODE] Binance Bot notification failed.`, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error(`[TEST MODE] Binance Bot notification failed.`);
     }
 
     return { status: 'success (TEST MODE)', mint: positionId, txId: 'fake-tx-id-start' };
@@ -880,19 +852,19 @@ async stopBinance() {
 
     const positionRecord = await this.positionRepository.findOne({ where: { positionId: nftMint } });
     if (!positionRecord) {
-        throw new Error(`[TEST MODE] Position ${nftMint} not found in database`, HttpStatus.NOT_FOUND);
+        throw new Error(`[TEST MODE] Position ${nftMint} not found in database`);
     }
     
     console.log(`[TEST MODE] Skipping on-chain transaction for closing position.`);
 
     try {
         const payload = { positionId: nftMint };
-        const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfig(nftMint); // <-- ДОБАВЛЕНО
+        const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfig(nftMint);
         
         console.log(`[TEST MODE] Notifying futures service (${exchangePrefix}) to stop hedging for position: ${nftMint}`);
-        await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/stop`, payload); // <-- ИЗМЕНЕНО
+        await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/stop`, payload);
         console.log('[TEST MODE] Successfully notified futures service to stop hedging.');
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[TEST MODE] Failed to notify futures service about closing position ${nftMint}: ${error.message}`);
     }
 
@@ -904,26 +876,22 @@ async stopBinance() {
   async getPositionDetails(positionId: string) {
     console.log(`Fetching details for position: ${positionId}`);
     
-    // 1. Находим запись о позиции в нашей базе данных
     const positionRecord = await this.positionRepository.findOne({ where: { positionId } });
     if (!positionRecord) {
-        throw new Error(`Position ${positionId} not found in our database.`, HttpStatus.NOT_FOUND);
+        throw new Error(`Position ${positionId} not found in our database.`);
     }
 
     try {
-        // 2. Вызываем приватный метод, чтобы получить детали хеджа с нужной биржи
         const hedgeDetails = await this.fetchHedgeDetails(positionId);
         
-        // 3. Объединяем данные из БД и данные о хедже
         return {
             ...positionRecord,
             hedgeDetails: hedgeDetails,
         };
 
     } catch (error) {
-        console.error(`Failed to fetch hedge details for ${positionId} from futures-service: ${error.message}`);
+        console.error(`Failed to fetch hedge details for ${positionId} from futures-service:`, error instanceof Error ? error.message : error);
         
-        // Обрабатываем случай, когда хедж-сервис вернул ошибку 404 (не найдено)
         if (axios.isAxiosError(error) && error.response?.status === 404) {
             return {
                 ...positionRecord,
@@ -931,9 +899,8 @@ async stopBinance() {
                 error: "Hedge position info not found on the futures service. It might have been cleared or not created."
             }
         }
-        
-        // В случае других ошибок пробрасываем общую ошибку сервера
-        throw new Error("Could not fetch details from the futures service.", HttpStatus.INTERNAL_SERVER_ERROR);
+
+        throw new Error("Could not fetch details from the futures service.");
     }
   }
 
@@ -942,20 +909,16 @@ async stopBinance() {
     const allPositions = await this.positionRepository.find();
     
     return allPositions.map(pos => {
-      // Проверяем, есть ли у позиции сохраненный план
       if (pos.hedgePlan && typeof pos.hedgePlan === 'object' && Object.keys(pos.hedgePlan).length > 0) {
-          // ДЛЯ НОВЫХ ПОЗИЦИЙ: возвращаем ID и сохраненный план
           console.log(`Position ${pos.positionId} has a saved plan. Exporting it.`);
           return {
               positionId: pos.positionId,
               hedgePlan: pos.hedgePlan,
           };
       } else {
-          // ДЛЯ СТАРЫХ ПОЗИЦИЙ: возвращаем старый набор данных для пересчета
           console.warn(`Position ${pos.positionId} does NOT have a saved plan. Exporting data for fallback recalculation.`);
           
-          // Эта логика взята из вашей старой версии файла
-          const DUMMY_PERCENT = 0.10; // 10%
+          const DUMMY_PERCENT = 0.10;
           const startPrice = pos.startPrice || pos.initialPriceA * (1 - DUMMY_PERCENT);
           const endPrice = pos.endPrice || pos.initialPriceA * (1 + DUMMY_PERCENT);
 
@@ -972,13 +935,12 @@ async stopBinance() {
     });
   }
 
-  async getActiveWallet(): Promise<{ publicKey: string }> {
+  async getActiveWallet(): Promise<{ publicKey: string | null }> {
     try {
       const owner = await this.getOwnerKeypair();
       return { publicKey: owner.publicKey.toBase58() };
     } catch (error) {
- 
-      if (error instanceof Error && error.getStatus() === HttpStatus.UNAUTHORIZED) {
+      if (error instanceof Error && error.message.startsWith('Private key is not set')) {
         return { publicKey: null };
       }
  
@@ -992,30 +954,25 @@ async stopBinance() {
     legs: {
         binancePairSymbol: string,
         baseMint: string,
-        // Каждая "нога" теперь имеет свои собственные параметры
         inputAmount: number,
         priceRangePercent: number,
     }[]
   }) {
-    // 1. Собираем символы для запроса цен всех "ног" одним вызовом
     const symbolsToFetch = params.legs.map(leg => leg.baseMint).join(',');
     const prices = await this.getTokenPrices(symbolsToFetch);
 
     let totalValue = 0;
     const calculationLegs: any[] = [];
 
-    // 2. Итерируемся по "ногам" и вычисляем параметры для каждой индивидуально
     for (const leg of params.legs) {
         const currentPrice = prices[leg.baseMint];
         if (!currentPrice) {
-            throw new Error(`Could not fetch price for base asset ${leg.baseMint}`, HttpStatus.SERVICE_UNAVAILABLE);
+            throw new Error(`Could not fetch price for base asset ${leg.baseMint}`);
         }
 
-        // Вычисляем стоимость, исходя из ИНДИВИДУАЛЬНОГО inputAmount этой "ноги"
         const valueForLeg = leg.inputAmount * currentPrice;
         totalValue += valueForLeg;
         
-        // Используем ИНДИВИДУАЛЬНЫЙ priceRangePercent для расчета диапазона
         const percent = leg.priceRangePercent / 100;
         const lowerPrice = currentPrice * (1 - percent);
         const upperPrice = currentPrice * (1 + percent);
@@ -1026,17 +983,14 @@ async stopBinance() {
                 lower: lowerPrice.toString(),
                 upper: upperPrice.toString(),
             },
-            // Передаем кастомные значения, если они нужны в binance-service
-            // (пока не используются, но это хороший задел на будущее)
             customBaseHedgeAmount: leg.inputAmount, 
-            customLeverage: 0, // Или другое значение по умолчанию
+            customLeverage: 0,
         });
     }
 
     try {
-        const binanceServiceHost = this.configService.get<string>('FUTURES_HOST');
+        const binanceServiceHost = process.env.FUTURES_HOST;
         
-        // 3. Формируем тело запроса в binance-service
         const payload = {
             strategyType: params.strategyType,
             totalValue: totalValue.toString(),
@@ -1052,11 +1006,10 @@ async stopBinance() {
         );
         return response.data;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to get hedge preview from binance-service', error.response?.data || error.message);
         throw new Error(
-            error.response?.data?.message || 'Could not calculate hedge plan.',
-            error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+            error.response?.data?.message || 'Could not calculate hedge plan.'
         );
     }
   }
@@ -1069,9 +1022,9 @@ async stopBinance() {
             plan
         );
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to get recalculated hedge plan from futures-service', error.response?.data || error.message);
-        throw new Error(error.response?.data?.message || 'Could not recalculate hedge plan.', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error(error.response?.data?.message || 'Could not recalculate hedge plan.');
     }
   }
 
@@ -1081,14 +1034,12 @@ async stopBinance() {
 
     try {
         const fileContent = await fs.readFile(filePath, 'utf-8');
-        // Типизируем данные, которые читаем из файла
         const configuredPools: ValidPair[] = JSON.parse(fileContent);
 
-        // Преобразование больше не нужно, формат уже совпадает с интерфейсом
         console.log(`Successfully loaded ${configuredPools.length} pairs from the config file.`);
         return configuredPools;
 
-    } catch (error) {
+    } catch (error: any) {
         if (error.code === 'ENOENT') {
             console.error('CRITICAL ERROR: raydium-pools.json not found.');
         } else {
@@ -1100,46 +1051,43 @@ async stopBinance() {
 
   async getFuturesAccountBalance(exchange: 'binance' | 'bybit') {
     try {
-        const futuresHost = this.configService.get<string>('FUTURES_HOST');
-        // Путь теперь динамический
+        const futuresHost = process.env.FUTURES_HOST;
         const response = await axios.get(`http://${futuresHost}/${exchange}/account/balance`);
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Failed to get balance from ${exchange}-service: ${error.message}`);
-        throw new Error(`Could not retrieve ${exchange} balance.`, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error(`Could not retrieve ${exchange} balance.`);
     }
   }
 
   async enableRebalance(positionId: string): Promise<void> {
     const position = await this.positionRepository.findOne({ where: { positionId } });
     if (!position) {
-        throw new Error(`Position ${positionId} not found`, HttpStatus.NOT_FOUND);
+        throw new Error(`Position ${positionId} not found`);
     }
 
     position.isAutoRebalancing = true;
     await this.positionRepository.save(position);
     console.log(`Position ${positionId} successfully marked for rebalancing in DB.`);
 
-    // Отправляем команду на старт микросервису
     try {
-        const rebalancerHost = this.configService.get<string>('REBALANCER_HOST'); // e.g., http://localhost:3001
+        const rebalancerHost = process.env.REBALANCER_HOST;
         await axios.post(`http://${rebalancerHost}/rebalance/start`, {
             positionId: positionId,
         });
         console.log(`Successfully sent start command to rebalancer for position ${positionId}.`);
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Failed to send start command to rebalancer for ${positionId}:`, error.message);
-        // Можно откатить флаг в БД или просто записать ошибку
         position.isAutoRebalancing = false;
         await this.positionRepository.save(position);
-        throw new Error('Could not communicate with the rebalancer service.', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error('Could not communicate with the rebalancer service.');
     }
   }
 
   async disableRebalance(positionId: string): Promise<void> {
     const position = await this.positionRepository.findOne({ where: { positionId } });
     if (!position) {
-        throw new Error(`Position ${positionId} not found`, HttpStatus.NOT_FOUND);
+        throw new Error(`Position ${positionId} not found`);
     }
 
     position.isAutoRebalancing = false;
@@ -1153,31 +1101,30 @@ async stopBinance() {
 
     const oldPosition = await this.positionRepository.findOne({ where: { positionId: oldPositionId } });
     if (!oldPosition) {
-        this.logger.warn(`[Rebalance] Callback for a non-existent old position ${oldPositionId}. Cannot proceed.`);
+        console.warn(`[Rebalance] Callback for a non-existent old position ${oldPositionId}. Cannot proceed.`);
         return;
     }
 
     try {
-        const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfig(oldPositionId); // <-- ДОБАВЛЕНО
-        await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/remap`, { // <-- ИЗМЕНЕНО
+        const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfig(oldPositionId);
+        await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/remap`, {
             oldPositionId: oldPositionId,
             newPositionId: newPositionData.positionId,
         });
         console.log(`[Rebalance] Successfully notified ${exchangePrefix}-service to remap hedge key.`);
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[CRITICAL] Failed to remap hedge in futures-service for ${oldPositionId}. The hedge might be orphaned.`, error.message);
     }
 
     await this.positionRepository.delete({ positionId: oldPositionId });
     console.log(`[Rebalance] Old position record ${oldPositionId} has been deleted.`);
 
-    // 4. Создаем новую запись, перенося в нее существующий план хеджирования
     const totalRebalanceCost = (fees.closeOldPositionFeeUSD || 0) + (fees.openNewPositionFeeUSD || 0);
 
     const positionToSave = {
         ...newPositionData,
-        hedgePlan: oldPosition.hedgePlan, // Переносим план
-        transactionCosts: totalRebalanceCost, // <-- ЗАПИСЫВАЕМ СУММАРНЫЕ ЗАТРАТЫ
+        hedgePlan: oldPosition.hedgePlan,
+        transactionCosts: totalRebalanceCost,
         isAutoRebalancing: true,
     };
     const savedPosition = await this.positionRepository.save(positionToSave);
@@ -1185,7 +1132,7 @@ async stopBinance() {
     console.log(`[Rebalance] New position record ${savedPosition.positionId} created with total rebalance cost of ${totalRebalanceCost.toFixed(4)} USD.`);
 
     try {
-      const rebalancerHost = this.configService.get<string>('REBALANCER_HOST');
+      const rebalancerHost = process.env.REBALANCER_HOST;
       if (rebalancerHost) {
           console.log(`[Rebalance] Sending START command to rebalancer for new position: ${savedPosition.positionId}`);
           await axios.post(`http://${rebalancerHost}/rebalance/start`, {
@@ -1193,12 +1140,10 @@ async stopBinance() {
           });
           console.log(`[Rebalance] Successfully sent start command to rebalancer.`);
       } else {
-          this.logger.warn('[Rebalance] REBALANCER_HOST is not configured. Cannot send start command.');
+          console.warn('[Rebalance] REBALANCER_HOST is not configured. Cannot send start command.');
       }
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[CRITICAL] Failed to send START command to rebalancer for new position ${savedPosition.positionId}.`, error.message);
-        // Ошибка здесь критична, так как автоматическое отслеживание не начнется без перезапуска.
-        // Можно добавить систему оповещений для таких случаев.
     }
   }
 
@@ -1212,14 +1157,12 @@ async stopBinance() {
           '1D':  { unit: 'day',    aggregate: 1 },
       };
       
-      const apiParams = timeframeMap[resolution] || timeframeMap['1H'];
+      const apiParams = timeframeMap[resolution as keyof typeof timeframeMap] || timeframeMap['1H'];
       const url = `https://api.geckoterminal.com/api/v2/networks/solana/pools/${poolId}/ohlcv/${apiParams.unit}`;
 
       try {
           const response = await axios.get(url, {
-              // --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ ТАЙМ-АУТ ---
-              timeout: 15000, // Ждем не более 15 секунд (15000 миллисекунд)
-              // -------------------------------------------------
+              timeout: 15000,
               params: {
                   aggregate: apiParams.aggregate,
                   limit: 1000,
@@ -1231,17 +1174,16 @@ async stopBinance() {
               }
           });
 
-          // Эта часть кода теперь будет выполняться только если ответ пришел вовремя
           console.log(`Received response from GeckoTerminal for pool ${poolId}`);
           const ohlcvList = response.data?.data?.attributes?.ohlcv_list;
           
           if (!ohlcvList || ohlcvList.length === 0) {
-              this.logger.warn(`No chart data returned from GeckoTerminal for pool ${poolId}`);
+              console.warn(`No chart data returned from GeckoTerminal for pool ${poolId}`);
               return [];
           }
           
           console.log(`Processing ${ohlcvList.length} candles...`);
-          return ohlcvList.map(candle => ({
+          return ohlcvList.map((candle: number[]) => ({
               time: candle[0],
               open: candle[1],
               high: candle[2],
@@ -1250,18 +1192,16 @@ async stopBinance() {
               volume: candle[5],
           }));
 
-      } catch (error) {
-          // Теперь мы будем ловить ошибку тайм-аута здесь
+      } catch (error: any) {
           if (error.code === 'ECONNABORTED') {
               console.error(`Request to GeckoTerminal timed out for pool ${poolId}`);
           } else {
               const errorDetails = error.response?.data?.errors?.[0]?.title || error.message;
               console.error(`Failed to fetch chart data from GeckoTerminal for pool ${poolId}: ${errorDetails}`);
           }
-          
+        
           throw new Error(
-              'Chart data provider did not respond in time.',
-              HttpStatus.GATEWAY_TIMEOUT, // Используем более подходящий статус ошибки
+              'Chart data provider did not respond in time.'
           );
       }
   }
@@ -1270,7 +1210,8 @@ async stopBinance() {
   async updateHedgeState(positionId: string, state: any): Promise<Position> {
     const position = await this.positionRepository.findOne({ where: { positionId } });
     if (!position) {
-        throw new Error('Position not found', HttpStatus.NOT_FOUND);
+
+        throw new Error('Position not found');
     }
     position.hedgePlan = state;
     return this.positionRepository.save(position);
@@ -1312,7 +1253,8 @@ async stopBinance() {
                 const positionData = positionAccountMap.get(record.positionId);
                 
                 if (!positionData) {
-                    this.logger.warn(`[GHOST DETECTED] Position ${record.positionId} is in DB but not on-chain. Hiding from frontend.`);
+
+                    console.warn(`[GHOST DETECTED] Position ${record.positionId} is in DB but not on-chain. Hiding from frontend.`);
                     return null;
                 }
 
@@ -1360,7 +1302,7 @@ async stopBinance() {
                 };
                 return combinedData;
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`Could not process position ${record.positionId} in batch: ${error.message}`);
                 return { ...record, details: { error: `Failed to process position.` } };
             }
@@ -1381,7 +1323,7 @@ async stopBinance() {
 
         const response = await axios.get(requestUrl);
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error(`[fetchHedgeDetails] Failed for position ${positionId}: ${error.message}`);
 
         if (axios.isAxiosError(error)) {
@@ -1412,13 +1354,13 @@ async stopBinance() {
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const errorMsg = error.response?.data?.detail || error.message;
-            const statusCode = error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
+            const statusCode = error.response?.status || 500;
             console.error(`Error from analytics service: [${statusCode}] ${errorMsg}`);
-            throw new Error(errorMsg, statusCode);
+            throw new Error(errorMsg);
         }
         
         console.error('An unknown error occurred while calling the analytics service', error);
-        throw new Error('Failed to communicate with the range analytics service.', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error('Failed to communicate with the range analytics service.');
     }
   }
 
@@ -1435,7 +1377,7 @@ async stopBinance() {
         return [];
       }
       console.error('An unknown error occurred while proxying to scanner.', error);
-      throw new Error('Could not retrieve data from the scanner service.', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new Error('Could not retrieve data from the scanner service.');
     }
   }
 
@@ -1457,9 +1399,9 @@ async stopBinance() {
         const response = await axios.post(targetUrl, params);
         
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Failed to start simulation for existing position: ${error.message}`);
-        throw new Error('Could not start simulation on the hedging service.', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new Error('Could not start simulation on the hedging service.');
     }
   }
 
@@ -1467,7 +1409,7 @@ async stopBinance() {
     const position = await this.positionRepository.findOne({ where: { positionId } });
     const exchange = position?.hedgeExchange || 'binance'; 
     const hostEnvVariable = exchange === 'bybit' ? 'BYBIT_FUTURES_HOST' : 'BINANCE_FUTURES_HOST';
-    const futuresHost = this.configService.get<string>(hostEnvVariable);
+    const futuresHost = process.env[hostEnvVariable as 'BYBIT_FUTURES_HOST' | 'BINANCE_FUTURES_HOST'];
     if (!futuresHost) {
         throw new Error(`Host for ${exchange} (${hostEnvVariable}) is not configured in .env`);
     }
@@ -1481,26 +1423,22 @@ async stopBinance() {
     console.log(`[Validation] Received request for ${params.exchange} with value ${params.totalValue}`);
     try {
       const { futuresHost, exchangePrefix } = await this.getFuturesServiceConfigForExchange(params.exchange);
-      // Мы создадим этот новый эндпоинт в binance/bybit контроллерах
       await axios.post(`http://${futuresHost}/${exchangePrefix}/hedging/validate-value`, {
         totalValue: params.totalValue,
         legs: params.legs,
       });
-      // Если запрос прошел без ошибок, значит, сумма валидна
       return { isValid: true, message: 'OK' };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data) {
-        // Возвращаем текст ошибки, который прислал сервис (например, "The entered amount does not meet...")
         return { isValid: false, message: error.response.data.message };
       }
-      // Общая ошибка, если сервис недоступен
       return { isValid: false, message: 'Could not connect to the hedging service for validation.' };
     }
   }
 
   private async getFuturesServiceConfigForExchange(exchange: 'binance' | 'bybit'): Promise<{ futuresHost: string; exchangePrefix: string }> {
     const hostEnvVariable = exchange === 'bybit' ? 'BYBIT_FUTURES_HOST' : 'BINANCE_FUTURES_HOST';
-    const futuresHost = this.configService.get<string>(hostEnvVariable);
+    const futuresHost = process.env[hostEnvVariable];
     if (!futuresHost) {
         throw new Error(`Host for ${exchange} (${hostEnvVariable}) is not configured in .env`);
     }
@@ -1509,5 +1447,4 @@ async stopBinance() {
         exchangePrefix: exchange,
     };
   }
-  
 }
