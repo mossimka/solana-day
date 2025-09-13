@@ -319,4 +319,45 @@ export class LiquidityController {
             this.handleError(res, error);
         }
     }
+
+    async saveBinanceKeys(req: Request, res: Response) {
+        try {
+            const { apiKey, secretKey } = req.body;
+            
+            if (!apiKey || !secretKey) {
+                return res.status(400).json({ 
+                    message: 'Both API key and Secret key are required' 
+                });
+            }
+
+            await this.liquidityBotService.saveBinanceKeys({ apiKey, secretKey });
+            res.status(200).json({ message: 'Binance API keys saved successfully' });
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
+    async getBinanceKeys(req: Request, res: Response) {
+        try {
+            const keys = await this.liquidityBotService.getBinanceKeys();
+            if (!keys) {
+                return res.status(404).json({ 
+                    message: 'No Binance API keys found' 
+                });
+            }
+            // Возвращаем только информацию о наличии ключей, без их значений
+            res.json({ hasKeys: true });
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
+    async deleteBinanceKeys(req: Request, res: Response) {
+        try {
+            await this.liquidityBotService.deleteBinanceKeys();
+            res.json({ message: 'Binance API keys deleted successfully' });
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
 }

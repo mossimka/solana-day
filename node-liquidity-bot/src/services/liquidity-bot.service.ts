@@ -22,50 +22,65 @@ import { initSdk, txVersion } from '../config/config';
 import { isValidClmm } from '../utils/raydium.utils';
 import { Position } from '../entities/position.entity';
 import { SessionWallet } from '../entities/session-wallet.entity';
+import { BinanceKeys } from '../entities/binance-keys.entity';
 import { CryptoService } from './crypto.service';
+import { BinanceApiKeys } from '../interfaces/binance-api-keys.interface';
 
 export class LiquidityBotService {
-    private positionRepository: Repository<Position>;
-    private sessionWalletRepository: Repository<SessionWallet>;
-    private cryptoService: CryptoService;
-    private connection: Connection;
-    private raydium!: Raydium; 
-    private cluster: string;
-    private readonly coinMarketCapApiKey: string;
-    private currentOwnerPk: PublicKey | null = null;
-    private cachedPairs: PoolInfo[] = [];
-    private lastCacheTime: number = 0;
-    private readonly CLMM_PROGRAM_ID = new PublicKey('CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK');
-    private readonly birdeyeApiKey: string;
-    private readonly moralisApiKey: string;
+  private binanceKeysRepository: Repository<BinanceKeys>;
+  private positionRepository: Repository<Position>;
+  private sessionWalletRepository: Repository<SessionWallet>;
+  private cryptoService: CryptoService;
+  private connection: Connection;
+  private raydium!: Raydium; 
+  private cluster: string;
+  private readonly coinMarketCapApiKey: string;
+  private currentOwnerPk: PublicKey | null = null;
+  private cachedPairs: PoolInfo[] = [];
+  private lastCacheTime: number = 0;
+  private readonly CLMM_PROGRAM_ID = new PublicKey('CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK');
+  private readonly birdeyeApiKey: string;
+  private readonly moralisApiKey: string;
 
-    constructor(
-        positionRepository: Repository<Position>,
-        sessionWalletRepository: Repository<SessionWallet>,
-        cryptoService: CryptoService
-    ) {
-        this.positionRepository = positionRepository;
-        this.sessionWalletRepository = sessionWalletRepository;
-        this.cryptoService = cryptoService;
-        const coinMarketCapApiKey = process.env.COINMARKETCAP_API_KEY;
-        const birdeyeApiKey = process.env.BIRDEYE_API_KEY;
-        const moralisApiKey = process.env.MORALIS_API_KEY;
-        const scannerHost = process.env.SCANNER_HOST;
-        if (!coinMarketCapApiKey || !birdeyeApiKey || !moralisApiKey || !scannerHost) {
-            throw new Error('CRITICAL: One or more required API keys or HOSTs are not configured in .env file!');
-        }
+  constructor(
+      positionRepository: Repository<Position>,
+      sessionWalletRepository: Repository<SessionWallet>,
+      cryptoService: CryptoService,
+      binanceKeysRepository: Repository<BinanceKeys>,
+  ) {
+      this.positionRepository = positionRepository;
+      this.sessionWalletRepository = sessionWalletRepository;
+      this.cryptoService = cryptoService;
+      this.binanceKeysRepository = binanceKeysRepository;
 
-        this.coinMarketCapApiKey = coinMarketCapApiKey;
-        this.birdeyeApiKey = birdeyeApiKey;
-        this.moralisApiKey = moralisApiKey;
+      const coinMarketCapApiKey = process.env.COINMARKETCAP_API_KEY;
+      const birdeyeApiKey = process.env.BIRDEYE_API_KEY;
+      const moralisApiKey = process.env.MORALIS_API_KEY;
+      const futuresHost = process.env.BINANCE_FUTURES_HOST;
+      const rpcUrl = process.env.RPC_URL;
 
-        this.cluster = 'mainnet';
-        const rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=ec7871b0-d394-4763-a453-02b32dfe92f8';
-        this.connection = new Connection(rpcUrl, 'confirmed');
-        console.log(`Initialized with RPC: ${rpcUrl}`);
-        this.initializeCronJobs();
+      if (!coinMarketCapApiKey || !birdeyeApiKey || !moralisApiKey || !futuresHost || !rpcUrl) {
+          throw new Error('CRITICAL: Required API keys or RPC URL are not configured in .env file!');
+      }
+
+      this.coinMarketCapApiKey = coinMarketCapApiKey;
+      this.birdeyeApiKey = birdeyeApiKey;
+      this.moralisApiKey = moralisApiKey;
+      this.cluster = process.env.CLUSTER || 'mainnet-beta';
+
+      // Initialize Solana connection
+      this.connection = new Connection(rpcUrl, 'confirmed');
+
+      this.initializeCronJobs();
+  }
+
+    private async areBinanceKeysConfigured(): Promise<boolean> {
+        const keys = await this.binanceKeysRepository.find({
+            order: { created_at: 'DESC' },
+            take: 1,
+        });
+        return keys.length > 0;
     }
-
 
     private initializeCronJobs(): void {
         console.log('LiquidityBotService initialized. Scheduling cron jobs...');
@@ -1355,10 +1370,16 @@ async stopBinance() {
   }
 
   private async getFuturesServiceConfig(positionId: string): Promise<{ futuresHost: string; exchangePrefix: string }> {
+    const hasKeys = await this.areBinanceKeysConfigured();
+    if (!hasKeys) {
+        throw new Error('Binance API keys are not configured. Please save your API keys first.');
+    }
+
     const futuresHost = process.env.BINANCE_FUTURES_HOST;
     if (!futuresHost) {
         throw new Error('BINANCE_FUTURES_HOST is not configured in .env');
     }
+
     return {
         futuresHost,
         exchangePrefix: 'binance',
@@ -1385,4 +1406,58 @@ async stopBinance() {
         return { isValid: false, message: 'Could not connect to the hedging service for validation.' };
     }
   }
+
+  async saveBinanceKeys(keys: BinanceApiKeys): Promise<void> {
+    if (!keys.apiKey || !keys.secretKey) {
+        throw new Error('Both API key and Secret key are required');
+    }
+
+    const { iv: ivApi, encryptedData: encryptedApiKey } = 
+        this.cryptoService.encrypt(keys.apiKey);
+    const { iv: ivSecret, encryptedData: encryptedSecretKey } = 
+        this.cryptoService.encrypt(keys.secretKey);
+
+    // Очищаем старые ключи
+    await this.binanceKeysRepository.clear();
+
+    const newKeys = this.binanceKeysRepository.create({
+        encrypted_api_key: encryptedApiKey,
+        encrypted_secret_key: encryptedSecretKey,
+        iv_api: ivApi,
+        iv_secret: ivSecret,
+    });
+
+    await this.binanceKeysRepository.save(newKeys);
+  }
+
+  async getBinanceKeys(): Promise<BinanceApiKeys | null> {
+    const keys = await this.binanceKeysRepository.find({
+        order: { created_at: 'DESC' },
+        take: 1,
+    });
+
+    if (!keys || keys.length === 0) {
+        return null;
+    }
+
+    const latestKeys = keys[0];
+    
+    return {
+        apiKey: this.cryptoService.decrypt(
+            latestKeys.encrypted_api_key, 
+            latestKeys.iv_api
+        ),
+        secretKey: this.cryptoService.decrypt(
+            latestKeys.encrypted_secret_key, 
+            latestKeys.iv_secret
+        )
+    };
+  }
+
+  async deleteBinanceKeys(): Promise<void> {
+    await this.binanceKeysRepository.clear();
+    console.log('All Binance API keys have been deleted.');
+  }
+
+
 }

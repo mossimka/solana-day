@@ -6,17 +6,19 @@ import { AppDataSource } from '../config/data-source';
 import { Position } from '../entities/position.entity';
 import { SessionWallet } from '../entities/session-wallet.entity';
 import { authMiddleware } from '../middleware/auth.middleware';
-
+import { BinanceKeys } from '../entities/binance-keys.entity';
 const router = Router();
-
+const binanceKeysRepository = AppDataSource.getRepository(BinanceKeys);
 const positionRepository = AppDataSource.getRepository(Position);
 const sessionWalletRepository = AppDataSource.getRepository(SessionWallet);
 const cryptoService = new CryptoService();
 const liquidityBotService = new LiquidityBotService(
     positionRepository,
     sessionWalletRepository,
-    cryptoService
+    cryptoService,
+    binanceKeysRepository
 );
+
 const liquidityController = new LiquidityController(liquidityBotService);
 
 router.post('/setup-position', authMiddleware, (req, res) => liquidityController.setupLiquidityPosition(req, res));
@@ -53,5 +55,9 @@ router.get('/futures/balance', authMiddleware, (req, res) => liquidityController
 router.get('/internal/active-for-hedging', (req, res) => liquidityController.getAllActiveForHedging(req, res));
 router.post('/internal/rebalance-completed', (req, res) => liquidityController.handleRebalanceCompletion(req, res));
 router.post('/internal/positions/:positionId/update-state', (req, res) => liquidityController.updateHedgeState(req, res));
+
+router.post('/binance/keys', authMiddleware, (req, res) => liquidityController.saveBinanceKeys(req, res));
+router.get('/binance/keys', authMiddleware, (req, res) => liquidityController.getBinanceKeys(req, res));
+router.delete('/binance/keys', authMiddleware, (req, res) => liquidityController.deleteBinanceKeys(req, res));
 
 export default router;
